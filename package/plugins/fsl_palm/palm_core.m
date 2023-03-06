@@ -1664,6 +1664,7 @@ for po = P_outer
                                     plm.Gclumax{y}{m}{c} = zeros(plm.nP{m}(c),1);
                                     [plm.Gclumax{y}{m}{c}(p),plm.Gclu{y}{m}{c}] = clusterfunc( ...
                                         G{y}{m}{c},y,opts.cluster.uni.thr,opts,plm,fastpiv{m}{c},M,psi,res,m,c,1);
+                                    
                                 else
                                     plm.Gclumax{y}{m}{c}(p) = clusterfunc( ...
                                         G{y}{m}{c},y,opts.cluster.uni.thr,opts,plm,fastpiv{m}{c},M,psi,res,m,c,1);

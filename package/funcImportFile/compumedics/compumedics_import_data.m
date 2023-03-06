@@ -33,12 +33,6 @@ else
     EEG.data(end+1, :) = zeros(1, EEG.pnts, 'single');
 end
 EEG.nbchan = size(EEG.data, 1);
-% ************************************************************
-% FOR TESTING PURPOSES ONLY PLEASE DELETE LATER
-if EEG.nbchan == 3
-    return
-end
-% ************************************************************
 % The PIB channels are intermixed with the EEG channels, so we need
 % to extract them and place them at the end of the rows
 pibchans = false(1, EEG.nbchan);

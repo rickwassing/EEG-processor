@@ -1,5 +1,7 @@
 function State = DefaultState(Path)
+% ---------------------------------------------------------
 State = struct();
+State.Verbose = true;
 % ---------------------------------------------------------
 % Protocol values
 State.Protocol = struct();
@@ -20,10 +22,8 @@ State.Protocol.JSON.EthicsApprovals = {''};
 State.Protocol.JSON.ReferencesAndLinks = {''};
 State.Protocol.JSON.DatasetDOI = '10.xxxx';
 % ---------------------------------------------------------
-State.Subjects.ids = {};
-State.Subjects.Entities = struct();
-State.Files.ids = {};
-State.Files.Entities = struct();
+State.Subjects = table();
+State.Files = table();
 % ---------------------------------------------------------
 % Keep track of processes and results
 State.Processes = struct();

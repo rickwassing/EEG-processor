@@ -113,4 +113,6 @@ for i = 1:length(events.Children)
     end
 end
 
+EEG = forceValidEventType(EEG);
+
 end

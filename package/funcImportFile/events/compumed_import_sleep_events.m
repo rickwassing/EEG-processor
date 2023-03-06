@@ -79,4 +79,9 @@ for e = 1:size(events, 1)
     type = lower(matlab.lang.makeValidName(type));
     EEG.event(end).type = type;
 end
+
 EEG.etc.rec_startdate = datestr(EEG.etc.rec_startdate, 'yyyy-mm-ddTHH:MM:SS');
+
+EEG = forceValidEventType(EEG);
+
+end

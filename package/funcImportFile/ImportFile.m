@@ -1,5 +1,6 @@
 function [ArgOut, Next, Warnings] = ImportFile(Import)
 % Initialize warnings
+Next = ''; %#ok<NASGU> 
 Warnings = {};
 % -------------------------------------------------------------------------
 % Check if files exist
@@ -103,7 +104,7 @@ if Import.SaveAs.Type == 12
 end
 % -------------------------------------------------------------------------
 % LOAD THE EEG DATA
-disp('>> BIDS: Loading EEG data')
+fprintf('>> BIDS: Loading EEG data from file ''%s''.\n', reverse_fileparts(Import.DataFile.Path))
 switch Import.DataFile.Type
     case 'MFF'
         EEG = mff_import_eeg_data(EEG, MFF);
@@ -229,23 +230,6 @@ if ~isempty(Import.Events.WonambiXMLPath)
         warnmsg = sprintf('%s: %s', EEG.filename, warnmsg);
         Warnings = [Warnings, {warnmsg; '-----'}];
     end
-end
-% Make sure there is at least one event
-if isempty(EEG.event)
-    EEG.event = struct('latency', 0.5, 'duration', 0, 'type', 'start', 'id', 1, 'is_reject', false);
-end
-% Make sure there is a 'duration' field
-if ~isfield(EEG.event, 'duration')
-    for ei = 1:length(EEG.event)
-        EEG.event(ei).duration = 0;
-    end
-end
-% Check that all event labels are Matlab valid variable names
-for ei = 1:length(EEG.event)
-    if ~ischar(EEG.event(ei).type)
-        EEG.event(ei).type = num2str(EEG.event(ei).type);
-    end
-    EEG.event(ei).type = matlab.lang.makeValidName(EEG.event(ei).type);
 end
 % Store the original events in case we modify any of the events
 EEG.urevent = EEG.event;

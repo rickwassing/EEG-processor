@@ -35,3 +35,7 @@ for s = 1:size(stages, 1)
             EEG.event(end).type = 'NS';
     end
 end
+
+EEG = forceValidEventType(EEG);
+
+end

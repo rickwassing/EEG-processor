@@ -50,28 +50,23 @@ for i = 1:length(GLM.result)
         end
     end
     for j = 1:length(GLM.result(i).t)
-        switch GLM.stats.Ttests.Sided{j}
-            case 'one'
-                sided = 1;
-            case 'two'
-                sided = 2;
-        end
+        % ID #0014
         switch GLM.poststats.Method
             case {'ClusterMass', 'ClusterExtent'}
                 p_cor = GLM.result(i).t(j).p_perm;
-                t_cor = GLM.poststats.ClusterAlpha/sided;
+                t_cor = GLM.poststats.ClusterAlpha;
             case 'TFCE'
                 p_cor = GLM.result(i).t(j).p_perm;
-                t_cor = GLM.poststats.ChanWiseAlpha/sided;
+                t_cor = GLM.poststats.ChanWiseAlpha;
             case 'FDR'
                 p_cor = GLM.result(i).t(j).p_fdr;
-                t_cor = GLM.poststats.ChanWiseAlpha/sided;
+                t_cor = GLM.poststats.ChanWiseAlpha;
             otherwise
                 p_cor = ones(size(GLM.result(i).t(j).cope));
-                t_cor = 0.05.*ones(size(GLM.result(i).t(j).cope))/sided;
+                t_cor = 0.05.*ones(size(GLM.result(i).t(j).cope));
         end
         p_unc = GLM.result(i).t(j).p_unc;
-        t_unc = GLM.poststats.ChanWiseAlpha/sided;
+        t_unc = GLM.poststats.ChanWiseAlpha;
         H = plotGroupStatTopoplot(...
             GLM.result(i).t(j).cope, ...
             GLM.result(i).t(j).stat, ...

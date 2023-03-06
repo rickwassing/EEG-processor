@@ -1,7 +1,6 @@
 function [FileList, ids] = SelectFileById(app, FileIds)
 % ---------------------------------------------------------
-idx = ismember(app.State.Files.ids, FileIds);
-ids = app.State.Files.ids(idx);
-FileList = cellfun(@(id) app.State.Files.Entities.(id), ids, ...
-    'UniformOutput', false);
+idx = matches(app.State.Files.Id, FileIds);
+FileList = app.State.Files(idx, :);
+ids = app.State.Files.Id(idx);
 end

@@ -10,9 +10,9 @@ if exist(fullfile(mffName, 'epochs.xml'), 'file') == 0
 else
     epochxml = parseXML(fullfile(mffName, 'epochs.xml'));
 end
-if exist(fullfile(mffName, 'Events_User Markup.xml'), 'file') == 0
-    error('Could not find ''Events_User Markup.xml'' in the MFF package')
-end
+% if exist(fullfile(mffName, 'Events_User Markup.xml'), 'file') == 0
+%     error('Could not find ''Events_User Markup.xml'' in the MFF package')
+% end
 
 infoxml = parseXML(fullfile(mffName, 'info.xml'));
 
@@ -90,4 +90,8 @@ for i = 1:length(eventFiles)
                 end
         end
     end
+end
+
+EEG = forceValidEventType(EEG);
+
 end

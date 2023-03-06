@@ -10,11 +10,11 @@ for i = 1:length(ME)
     fprintf('\n');
     
     if nargout == 1
-        str = [str; {sprintf('%s', char(ME(i).message))}];
+        str = [str; {sprintf('%s', char(ME(i).message))}]; %#ok<AGROW> 
         for j = 1:length(ME(i).stack)
-            str = [str; {sprintf('    Error in %s (line %i)', ME(i).stack(j).name, ME(i).stack(j).line)}];
+            str = [str; {sprintf('    Error in %s (line %i)', ME(i).stack(j).name, ME(i).stack(j).line)}]; %#ok<AGROW> 
         end
-        str = [str; {'---------------------------------------------------------'}];
+        str = [str; {'---------------------------------------------------------'}]; %#ok<AGROW> 
     end
 end
 

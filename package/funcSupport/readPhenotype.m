@@ -1,9 +1,9 @@
 function PHEN = readPhenotype(Input)
 PHEN = table();
-PHEN.participant_id = cellfun(@(i) i.KeyVals.sub, Input, 'UniformOutput', false);
+PHEN.participant_id = ascolumn(cellfun(@(i) i.sub, Input.KeyVals, 'UniformOutput', false));
 PHEN = readAndAppend(PHEN, 'participants.tsv');
 % Get root project dir
-rootdir = strsplit(fileparts(Input{1}.Path), 'derivatives');
+rootdir = strsplit(fileparts(Input.Path{1}), 'derivatives');
 rootdir = rootdir{1};
 % Load any other phenotype data
 files = [...

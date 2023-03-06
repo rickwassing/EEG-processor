@@ -1,16 +1,16 @@
 %%
 % KEY-VALS
-Import.Subject = 'p2s66';
-Import.Session = '2';
+Import.Subject = '19cw';
+Import.Session = '1';
 Import.Task = 'psg';
-Import.Run = 1;
+Import.Run = 2;
 % INPUT DATA FILE
 Import.FileType = 'EEG';
-Import.DataFile.Type = 'COMPU257'; % choose from 'MFF', 'COMPU257', 'GRAEL'
-Import.DataFile.Path = '/Volumes/sleep/Sleep/2. STAFF/Rick/Z-Drugs for Analysis/Z-Drugs_EDF_30NOV2022/KDT EDF/XX_ZDRUGS_KDT_PM.edf';
+Import.DataFile.Type = 'MFF'; % choose from 'MFF', 'COMPU257', 'GRAEL'
+Import.DataFile.Path = '/Volumes/research-data/PRJ-CFSNRS/sourcedata/sub-19cw/psg/sub-19cw_ses-1_task-psg_run-2_eeg_20230209_005315.mff';
 % CHANNEL LOCATIONS
 Import.Channels.Type = 'Geoscan'; % Choose from 'Geoscan', 'GSN-HydroCel-257', 'Compumedics-257'
-Import.Channels.Path = '/Volumes/sleep/Sleep/2. STAFF/Rick/Z-Drugs for Analysis/check-me.txt';
+Import.Channels.Path = '/Volumes/research-data/PRJ-CFSNRS/sourcedata/sub-19cw/geoscan/nrs_sub_19cw_geoscan_20230208-192919.txt';
 % EVENTS
 Import.Events.Do = false;
 Import.Events.HypnoPath = '';
@@ -31,7 +31,7 @@ Import.Processing.DoSpectrogram = false;
 Import.Processing.DoICA = false;
 % SAVE AS
 Import.SaveAs.Type = 256;
-Import.SaveAs.Path = ['./check-me'];
+Import.SaveAs.Path = '/Volumes/research-data/PRJ-CFSNRS/sourcedata/sub-19cw/psg/sub-19cw_ses-1_task-psg_run-2_eeg.set';
 % --------------------------------------------------
 % RUN IMPORT
 [~, fname] = fileparts(Import.DataFile.Path);

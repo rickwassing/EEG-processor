@@ -5,9 +5,13 @@ randomSeeds = randperm(length(newFiles), length(newFiles));
 for k = 1:length(newFiles)
     try
         % ---------------------------------------------------------
+        % Replace backslashes
+        newFiles(k).folder = strrep(newFiles(k).folder, filesep, '/');
+        % -----
         % Find the associated JSON file
         [~, rootName] = fileparts(newFiles(k).name);
         jsonFile = dir([newFiles(k).folder, '/', rootName, '.json']);
+        jsonFile(1).folder = strrep(jsonFile(1).folder, filesep, '/');
         % -----
         % Generate filenames for the sidecar files
         KeysValues = filename2struct(rootName);
@@ -21,41 +25,40 @@ for k = 1:length(newFiles)
         % Add it to the structure
         id = ['X', datestr(now, 'HHMMSSFFF'), num2str(randomSeeds(k))];
         ids = [ids; {id}]; %#ok<AGROW>
-        Files.ids = [Files.ids; {id}];
-        Files.Entities.(id).Id = id;
-        Files.Entities.(id).Path = strrep([newFiles(k).folder, '/', newFiles(k).name], '\', '/');
-        Files.Entities.(id).SubId = SubId;
-        Files.Entities.(id).Type = type;
-        Files.Entities.(id).KeyVals = KeysValues;
+        Files.Id{end+1} = id;
+        Files.Path{end} = strrep([newFiles(k).folder, '/', newFiles(k).name], '\', '/');
+        Files.SubId{end} = SubId;
+        Files.Type{end} = type;
+        Files.KeyVals{end} = KeysValues;
         % Load JSON
         if isempty(jsonFile)
-            Files.Entities.(id).JSON = struct();
+            Files.JSON{end} = struct();
         else
-            Files.Entities.(id).JSON = json2struct([jsonFile(1).folder, '/', jsonFile(1).name]);
+            Files.JSON{end} = json2struct([jsonFile(1).folder, '/', jsonFile(1).name]);
         end
         % Load channels
         if exist(ChannelFilename, 'file') == 0
-            Files.Entities.(id).channels = table();
+            Files.channels{end} = table([]);
         else
-            Files.Entities.(id).channels = readSidecarTSV(ChannelFilename, 'channels');
+            Files.channels{end} = readSidecarTSV(ChannelFilename, 'channels');
         end
         % Load electrode positions
         if exist(ElectrodesFilename, 'file') == 0
-            Files.Entities.(id).chanlocs = table();
+            Files.chanlocs{end} = table([]);
         else
-            Files.Entities.(id).chanlocs = readSidecarTSV(ElectrodesFilename, 'electrodes');
+            Files.chanlocs{end} = readSidecarTSV(ElectrodesFilename, 'electrodes');
         end
         % Load events
         if exist(EventsFilename, 'file') == 0
-            Files.Entities.(id).events = table();
+            Files.events{end} = table();
         else
-            Files.Entities.(id).events = readSidecarTSV(EventsFilename, 'events');
+            Files.events{end} = readSidecarTSV(EventsFilename, 'events');
         end
-        Files.Entities.(id).Status = 'idle';
+        Files.Status{end} = 'idle';
     catch ME
         printME(ME);
-        Files.Entities.(id).Status = 'error';
-        Files.Entities.(id).ErrorMessage = ME;
+        Files.Status{end} = 'error';
+        Files.ErrorMessage{end} = printME(ME);
     end
 end
 end

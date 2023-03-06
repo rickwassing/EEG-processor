@@ -82,8 +82,10 @@ EEG = check_chanlocs(EEG, false);
 EEG.chanlocs = channel_clusters(EEG.chanlocs, DataType);
 % Finally, add the unit to the chanlocs
 for i = 1:length(EEG.chanlocs)
-    if ~isempty(EEG.chanlocs(i).unit)
-        continue
+    if isfield(EEG.chanlocs, 'unit')
+        if ~isempty(EEG.chanlocs(i).unit)
+            continue
+        end
     end
     EEG.chanlocs(i).unit = 'uV';
 end

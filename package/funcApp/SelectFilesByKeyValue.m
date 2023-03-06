@@ -1,14 +1,14 @@
-function [FileList, ids] = SelectFilesByKeyValue(app, Key, Value, varargin)
+function [FileList, ids, idx] = SelectFilesByKeyValue(app, Key, Value, varargin)
 % You must specify at least one key value pair by which you want to select
 % files, but you can specify more if you like
 % ---------------------------------------------------------
-idx = cellfun(@(id) strcmpi(app.State.Files.Entities.(id).KeyVals.(Key), Value), app.State.Files.ids);
+idx = cellfun(@(s) handleSelect(s, Key, Value), app.State.Files.KeyVals);
 for i = 1:2:length(varargin)
-    idx = idx & cellfun(@(id) handleSelect(app.State.Files.Entities.(id).KeyVals, varargin{i}, varargin{i+1}), app.State.Files.ids);
+    idx = idx & cellfun(@(s) handleSelect(s, varargin{i}, varargin{i+1}), app.State.Files.KeyVals);
 end
-ids = app.State.Files.ids(idx);
-FileList = cellfun(@(id) app.State.Files.Entities.(id), ids, ...
-    'UniformOutput', false);
+idx = find(idx);
+ids = app.State.Files.Id(idx);
+FileList = app.State.Files(idx, :);
 
     function bool = handleSelect(KeyVals, Key, Val)
         if isfield(KeyVals, Key)

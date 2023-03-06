@@ -83,7 +83,7 @@ if ~Settings.TimeSel.AllFile && ~(Settings.EventSel.Do && ~Settings.EventSel.Use
     fprintf('>> BIDS: Selecting subset of data between %.3f and %.3f seconds\n', Settings.TimeSel.Interval(1), Settings.TimeSel.Interval(2))
     Settings.EEG = pop_select(Settings.EEG, 'time', Settings.TimeSel.Interval);
     Settings.EEG.etc.JSON.RecordingDuration = Settings.EEG.pnts/Settings.EEG.srate;
-    Settings.EEG.etc = updateRecStartDate(EEG.etc, Settings.TimeSel.Interval(1)/(24*60*60));
+    Settings.EEG.etc = updateRecStartDate(Settings.EEG.etc, Settings.TimeSel.Interval(1)/(24*60*60));
 end
 % -------------------------------------------------------------------------
 % Check if filtering is set, if so, do filter, otherwise update JSON

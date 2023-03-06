@@ -73,7 +73,7 @@ for i = 1:EEG.trials
 end
 PSD.freqstep = mean(diff(PSD.freqs));
 % ---------------------------------------------------------
-% Calculate the absolute and relative power in user-specified frequency bands
+% Calculate the absolute and normalized power in user-specified frequency bands
 AllFreqs = cat(1, Settings.FreqDef.band);
 cnt = 0;
 for i = 1:length(Settings.FreqDef)
@@ -131,7 +131,7 @@ for i = 1:length(Settings.FreqDef)
     % Normalize the power relative to the normalization factor
     cnt = cnt+1;
     PSD.bands(cnt).label = sprintf('%s', Settings.FreqDef(i).label);
-    PSD.bands(cnt).type = 'relative';
+    PSD.bands(cnt).type = 'normalized';
     PSD.bands(cnt).freqrange = Settings.FreqDef(i).band;
     PSD.bands(cnt).data = squeeze((sum(PSD.data(:, idxFreq, :), 2) .* PSD.freqstep) ./ NormFactor);
 end

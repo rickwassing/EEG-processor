@@ -153,7 +153,7 @@ if ~ isempty(X)
             S.filename = filename;
         end
     end
-    
+
     % Transpose back
     if opts.transposedata && max(size(S.data)) == numel(S.data)
         S.data = S.data';

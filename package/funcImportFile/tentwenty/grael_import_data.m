@@ -23,7 +23,7 @@ EEG.comments = sprintf('Original file: %s', FullFilePath);
 EEG.trials = 1;
 EEG.nbchan = size(data, 2);
 EEG.pnts = sum(cellfun(@(ts) length(ts), data.(data.Properties.VariableNames{find(eegChans, 1)})));
-EEG.srate = hdr.Fs;
+EEG.srate = max(hdr.orig.SampleRate);
 EEG.xmin = 0;
 EEG.xmax = (EEG.pnts-1)/EEG.srate;
 EEG.times = EEG.xmin:1/EEG.srate:EEG.xmax;
@@ -35,7 +35,7 @@ for i = 1:size(data, 2)
     ts = data{:, i};
     ts = [ts{:}];
     ts = reshape(ts, 1, numel(ts));
-    % Check if we need to resample it
+    % Check if we need to resample it 
     if length(ts) ~= EEG.pnts
         [p,q] = rat(EEG.srate/hdr.orig.SampleRate(i), 1e-12);
         fc = 0.9; % normalized anti-aliasing filter cutoff

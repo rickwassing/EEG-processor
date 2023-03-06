@@ -8,11 +8,22 @@ function Files = GetFiles(app)
 % <dataset>/derivatives/EEG-inspect/sub-01/<any subfolder>
 % ---------------------------------------------------------
 % Initialize
-Files = struct();
-Files.ids = {};
-Files.Entities = {};
+Files = table();
+Files.Id = {}; 
+Files.Path = {};
+Files.SubId = {};
+Files.Type = {};
+Files.KeyVals = {};
+Files.JSON = {};
+Files.channels = {};
+Files.chanlocs = {};
+Files.events = {};
+Files.Status = {};
+Files.ErrorMessage = {};
+Files.PrevState = {};
 % Allowed extensions
 Extensions = {'.set', '.edf', '.mat'};
+% Init structures
 RawFiles = dir('imsureidontexist.xyz');
 DerFiles = RawFiles;
 FstLvlFiles = RawFiles;
@@ -52,33 +63,34 @@ fprintf('>> BIDS: Found %i files in %.0f seconds.\n', length(RawFiles) + length(
 % ---------------------------------------------------------
 % For each subject in the database, get all files and meta data
 startTime = now();
-for i = 1:length(app.State.Subjects.ids)
+for i = 1:size(app.State.Subjects, 1)
     % ---------------------------------------------------------
     % Set waitbar
-    app.RenderWaitbar(sprintf('Adding files for subject %i of %i.', i, length(app.State.Subjects.ids)), i/length(app.State.Subjects.ids));
+    app.RenderWaitbar(sprintf('Adding files for subject %i of %i.', i, size(app.State.Subjects, 1)), i/size(app.State.Subjects, 1));
     % ---------------------------------------------------------
     % Extract subject id and name
     thisSubjectFileIds = cell(0);
-    SubId = app.State.Subjects.ids{i};
-    Name = app.State.Subjects.Entities.(SubId).Name;
+    SubId = app.State.Subjects.Id{i};
+    Name = app.State.Subjects.Name{i};
     % ---------------------------------------------------------
     % Get all the raw files of this subject
-    idx = regexpIdx({RawFiles.name}, Name);
+    % # ID0015
+    idx = regexpIdx({RawFiles.name}, [Name, '_']);
     FileList = RawFiles(idx);
     [Files, thisSubjectFileIds] = AddFilesToState(Files, SubId, FileList, 'raw', thisSubjectFileIds);
     % ---------------------------------------------------------
     % Get all the derivative files of this subject
-    idx = regexpIdx({DerFiles.name}, Name);
+    idx = regexpIdx({DerFiles.name}, [Name, '_']);
     FileList = DerFiles(idx);
     [Files, thisSubjectFileIds] = AddFilesToState(Files, SubId, FileList, 'derivative', thisSubjectFileIds);
     % ---------------------------------------------------------
     % Get all the first level output files of this subject
-    idx = regexpIdx({FstLvlFiles.name}, Name);
+    idx = regexpIdx({FstLvlFiles.name}, [Name, '_']);
     FileList = FstLvlFiles(idx);
     [Files, thisSubjectFileIds] = AddFilesToState(Files, SubId, FileList, 'fstlvl', thisSubjectFileIds);
     % ---------------------------------------------------------
     % Add the file ids to the subject document
-    app.State.Subjects.Entities.(SubId).FileIds = thisSubjectFileIds;
+    app.State.Subjects.FileIds{i} = thisSubjectFileIds;
     % ---------------------------------------------------------
     % Command Window
     fprintf('>> BIDS: %i files loaded for subject %s.\n', length(thisSubjectFileIds), Name)

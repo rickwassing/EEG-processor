@@ -5,7 +5,7 @@ if ~isfield(EEG.chanlocs, 'labels')
 end
 if ~isfield(EEG.chanlocs, 'type')
     for i = 1:length(EEG.chanlocs)
-        EEG.chanlocs(i).type = 'OTHER';
+        EEG.chanlocs(i).type = 'MISC';
     end
 end
 if ~isfield(EEG.chanlocs, 'unit')
@@ -15,7 +15,18 @@ if ~isfield(EEG.chanlocs, 'unit')
 end
 if ~isfield(EEG.chanlocs, 'ref')
     for i = 1:length(EEG.chanlocs)
-        EEG.chanlocs(i).ref = 'unknown';
+        EEG.chanlocs(i).ref = 'n/a';
+    end
+end
+for i = 1:length(EEG.chanlocs)
+    if isempty(EEG.chanlocs(i).type)
+        EEG.chanlocs(i).type = 'MISC';
+    end
+    if isempty(EEG.chanlocs(i).unit)
+        EEG.chanlocs(i).unit = 'unknown';
+    end
+    if isempty(EEG.chanlocs(i).ref)
+        EEG.chanlocs(i).ref = 'n/a';
     end
 end
 Channels = table();

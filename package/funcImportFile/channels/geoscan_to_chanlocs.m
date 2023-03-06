@@ -10,13 +10,21 @@ function [chanlocs, ndchanlocs] = geoscan_to_chanlocs(meta_file)
     % Fixed ID #0012
     sfp = [(1:size(coordinates))', -1.*coordinates.y, coordinates.x, coordinates.z]; 
     
-    save('temp.sfp', 'sfp', '-ascii', '-tabs')
-    if exist('temp.sfp', 'file') == 0
-        error('Unexpected error while saving temporary channel file')
+%     save('temp.sfp', 'sfp', '-ascii', '-tabs')
+%     if exist('temp.sfp', 'file') == 0
+%         error('Unexpected error while saving temporary channel file')
+%     end
+%     urchanlocs = readlocs('temp.sfp');
+%     delete('temp.sfp')
+
+    urchanlocs = struct([]);
+    for i = 1:size(sfp, 1)
+        urchanlocs(i).labels = sprintf('%i', i);
+        urchanlocs(i).Y = -1*sfp(i, 2);
+        urchanlocs(i).X = sfp(i, 3);
+        urchanlocs(i).Z = sfp(i, 4);
     end
-    urchanlocs = readlocs('temp.sfp');
-    delete('temp.sfp')
-    
+    urchanlocs = convertlocs(urchanlocs, 'cart2all');
     % reorder fieldnames, as sometimes this is mixed up
     urchanlocs = orderfields(urchanlocs, {...
         'labels', ...

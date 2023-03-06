@@ -1,4 +1,4 @@
-function [Data, Next, Warnings] = GroupAnalysis_run(app, Settings)
+function [Data, Next, Warnings] = GroupAnalysis_run(app, Settings) %#ok<INUSL> 
 % ==================================================
 % RUN PALM
 % See for more details, see
@@ -14,13 +14,55 @@ Warnings = [];
 doRun = true;
 overwriteSeed = nan;
 % --------------------------------------------------
+% Extract the design matrix
+if ~isfield(Settings, 'result')
+    switch Settings.ModelType
+        case 'Two-sample paired t-test'
+            Intercept = [];
+        otherwise
+            Intercept = ones(size(Settings.Input, 1), 1);
+    end
+    DesMat = [Intercept, ...
+        [Settings.Model.Predictors.DesMat], ...
+        [Settings.Model.Interactions.DesMat], ...
+        [Settings.Model.RandVars.DesMat]];
+    % --------------------------------------------------
+    % Deal with missing data
+    Missing = sum(isnan(DesMat), 2) > 0;
+    if any(Missing)
+        Settings.Input(Missing, :) = [];
+        Settings.Model.ExchangeabilityBlocks(Missing) = [];
+        Settings.Model.VarianceGroups(Missing) = [];
+        for i = 1:length(Settings.Model.Predictors)
+            Settings.Model.Predictors(i).DesMat(Missing, :) = [];
+        end
+        for i = 1:length(Settings.Model.Interactions)
+            Settings.Model.Interactions(i).DesMat(Missing, :) = [];
+        end
+        for i = 1:length(Settings.Model.RandVars)
+            Settings.Model.RandVars(i).DesMat(Missing, :) = [];
+        end
+    end
+else
+    switch Settings.modeltype
+        case 'Two-sample paired t-test'
+            Intercept = [];
+        otherwise
+            Intercept = ones(size(Settings.Input, 1), 1);
+    end
+    DesMat = [Intercept, ...
+        [Settings.model.Predictors.DesMat], ...
+        [Settings.model.Interactions.DesMat], ...
+        [Settings.model.RandVars.DesMat]];
+end
+% --------------------------------------------------
 % Map some code so we can run this function using the 'GLM' output variable
 if isfield(Settings, 'result')
     GLM = Settings;
     Settings = struct();
     Settings.OutputDir = fileparts(GLM.filepath);
     Settings.Chanlocs = GLM.chanlocs;
-    Settings.Input = cell2struct(GLM.input, 'Path', length(GLM.input));
+    Settings.Input = GLM.input;
     Settings.ModelType = GLM.modeltype;
     Settings.Model = GLM.model;
     Settings.Statistics = GLM.stats;
@@ -37,8 +79,8 @@ else
         GLM.seed = overwriteSeed;
     end
     GLM.chanlocs = Settings.Chanlocs;
-    GLM.inputfiletype = Settings.Input{1}.KeyVals.filetype;
-    GLM.input = cellfun(@(f) f.Path, Settings.Input, 'UniformOutput', false);
+    GLM.inputfiletype = Settings.Input.KeyVals{1}.filetype;
+    GLM.input = Settings.Input;
     GLM.modeltype = Settings.ModelType;
     GLM.model = Settings.Model;
     GLM.stats = Settings.Statistics;
@@ -47,8 +89,8 @@ end
 % --------------------------------------------------
 % Read all input data files
 D = struct();
-for i = 1:length(GLM.input)
-    D(i).EEG = LoadDataset(GLM.input{i}, 'all');
+for i = 1:size(GLM.input, 1)
+    D(i).EEG = LoadDataset(GLM.input.Path{i}, 'all');
 end
 % --------------------------------------------------
 % Depending on the type of input file, extract the dependent variable
@@ -56,7 +98,7 @@ DepVars = struct();
 switch GLM.inputfiletype
     case 'powerspect'
         % Find which frequency bands were common across all files
-        if any(arrayfun(@(d) size(d.EEG.bands(1).data, 2), D)) > 1
+        if any(arrayfun(@(d) size(d.EEG.bands(1).data, 2), D) > 1)
             fprintf('>> BIDS: **************************************************\n')
             fprintf('>> BIDS: WARNING\n')
             fprintf('>> BIDS: Group-level analysis on data with more than 1 trial is not yet supported.\n')
@@ -78,17 +120,9 @@ switch GLM.inputfiletype
         end
 end
 % --------------------------------------------------
-% Extract the design matrix
-switch Settings.ModelType
-    case 'Two-sample paired t-test'
-        Intercept = [];
-    otherwise
-        Intercept = ones(length(Settings.Input), 1);
-end
-DesMat = [Intercept, ...
-    [Settings.Model.Predictors.DesMat], ...
-    [Settings.Model.Interactions.DesMat], ...
-    [Settings.Model.RandVars.DesMat]];
+% Extract EB and VG
+EB = Settings.Model.ExchangeabilityBlocks;
+VG = Settings.Model.VarianceGroups;
 % --------------------------------------------------
 % Construct all the T-contrast matrices
 Tcons = struct([]);
@@ -103,11 +137,9 @@ end
 rm_idx = sum(Settings.Statistics.Ftests) == 1;
 Settings.Statistics.Ftests(:, rm_idx) = [];
 % --------------------------------------------------
-% Extract F-contrasts, EB and VG
+% Extract F-contrasts
 T_FTESTS = GLM.stats.Ttests.Contrasts; % This orig T-contrast matrix is used for F-tests only
 F = Settings.Statistics.Ftests;
-EB = Settings.Model.ExchangeabilityBlocks;
-VG = Settings.Model.VarianceGroups;
 % --------------------------------------------------
 % Create subdir if not exist yet
 InputFileDir = [Settings.OutputDir, filesep, 'input'];
@@ -208,11 +240,15 @@ switch Settings.PostStats.Method
     case 'TFCE'
         params.tfce = '-T ';
         params.tfce_H = sprintf('-tfce_H %.2f ', Settings.PostStats.TFCE_H);
-        params.tfce_E = spintf('-tfce_E %.2f ', Settings.PostStats.TFCE_E);
+        params.tfce_E = sprintf('-tfce_E %.2f ', Settings.PostStats.TFCE_E);
 end
 % --------------------------------------------------
 % Cluster-forming threshold
 params.C_t = struct([]);
+% Calculate DOF
+dof1 = size(DesMat, 2);
+dof2 = size(DesMat, 1) - dof1;
+% Set argument
 switch Settings.PostStats.Method
     case {'ClusterExtent', 'ClusterMass'}
         for i = 1:length(Tcons)
@@ -226,7 +262,7 @@ switch Settings.PostStats.Method
 end
 params.C_f = '';
 if ~isempty(F)
-    params.C_f = sprintf('-C %.6f ', norminv(1-Settings.PostStats.ChanWiseAlpha/2));
+    params.C_f = sprintf('-C %.6f ', norminv(1-Settings.PostStats.ChanWiseAlpha/Sided));
 end
 % --------------------------------------------------
 % FDR
@@ -280,7 +316,7 @@ for i = 1:length(Tcons)
     % Store command
     GLM.command = char(GLM.command, cmd);
     % RUN!
-    fprintf('>> BIDS: Running PALM on T-contrast %i of %i\n', i, length(Tcons)); 
+    fprintf('>> BIDS: Running PALM on T-contrast %i of %i\n', i, length(Tcons));
     if doRun; eval(cmd); end
 end
 
