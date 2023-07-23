@@ -5,13 +5,9 @@ function Subjects = GetSubjects(app)
 Dirs = dir([app.State.Protocol.Path, '/rawdata/sub-*']);
 DerivativeDirs = dir([app.State.Protocol.Path, '/derivatives/EEG-*']);
 for i = 1:length(DerivativeDirs)
-    if i == 1
-        tmp = dir([app.State.Protocol.Path, '/derivatives/', DerivativeDirs(i).name,'/sub-*']);
-    else
-        tmp = [tmp; dir([app.State.Protocol.Path, '/derivatives/', DerivativeDirs(i).name,'/sub-*'])]; %#ok<AGROW> 
-    end
+    tmp = dir([app.State.Protocol.Path, '/derivatives/', DerivativeDirs(i).name,'/sub-*']);
+    Dirs = [Dirs; tmp]; %#ok<AGROW>
 end
-Dirs = [Dirs; tmp];
 % Filter out any non-directory
 Dirs = Dirs([Dirs.isdir] == 1);
 % Get all the unique directory names

@@ -145,7 +145,9 @@ if ~Settings.Split.Do && ~Settings.EventSel.Do && Settings.Reject.Epochs && ~ise
             end
         end
         % Also remove the reject events
-        Settings.EEG.event([Settings.EEG.event.is_reject] == 1) = [];
+        if ~isempty(Settings.EEG.event)
+            Settings.EEG.event([Settings.EEG.event.is_reject] == 1) = [];
+        end
         % Update the JSON Struct
         Settings.EEG.etc.JSON.RecordingDuration = Settings.EEG.pnts/Settings.EEG.srate;
         Settings.EEG.etc.JSON.RecordingType = 'discontinuous';

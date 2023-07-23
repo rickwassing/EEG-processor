@@ -23,7 +23,7 @@ Ax(2).CLim = [-max(max(GLM.stats.Ttests.Contrasts)), max(max(GLM.stats.Ttests.Co
 
 DesMat = [];
 if strcmpi(GLM.model.ModelSpec(1:5), 'Y ~ 1')
-    DesMat = ones(length(GLM.input), 1);
+    DesMat = ones(size(GLM.input, 1), 1);
 end
 
 DesMat = [DesMat, ...
@@ -42,7 +42,7 @@ text(Ax(1), size(DesMat, 2) + 2, 0, 'VG', ...
     'FontSize', 10, ...
     'Rotation', 90);
 
-for i = 1:length(GLM.input)
+for i = 1:size(GLM.input, 1)
     text(Ax(1), size(DesMat, 2) + 1, i, sprintf('%i', GLM.model.ExchangeabilityBlocks(i)), ...
         'HorizontalAlignment', 'center', ...
         'FontSize', 10)
@@ -58,8 +58,8 @@ Ax(1).XTickLabelRotation = 90;
 Ax(1).XAxisLocation = 'top';
 
 Ax(1).YDir = 'reverse';
-Ax(1).YTick = 1:length(GLM.input);
-Ax(1).YTickLabel = cellfun(@(i) strrep(reverse_fileparts(i), '_', ' '), GLM.input, 'UniformOutput', false);
+Ax(1).YTick = 1:size(GLM.input, 1);
+Ax(1).YTickLabel = strrep(reverse_fileparts(GLM.input.Path), '_', ' ');
 
 imagesc(Ax(2), GLM.stats.Ttests.Contrasts)
 

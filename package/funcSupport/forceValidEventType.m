@@ -45,6 +45,13 @@ for i = 1:length(EEG.event)
     if isempty(EEG.event(i).type)
         EEG.event(i).type = 'unknown';
     end
+    % ID #0017
+    if isnan(EEG.event(i).duration)
+        EEG.event(i).duration = 0;
+    end
+    if isempty(EEG.event(i).is_reject)
+        EEG.event(i).is_reject = false;
+    end
 end
 % Check that each event has a unique ID
 if length(unique([EEG.event.id])) ~= length(EEG.event)

@@ -87,6 +87,18 @@ if issuedetected
     EEG.chanlocs = newlocs;
 end
 
+% ID #0019: round channel locations to nearest 6 decimal points
+fields = {'X', 'Y', 'Z', 'sph_theta', 'sph_phi', 'sph_radius', 'theta', 'radius'};
+for i = 1:length(EEG.chanlocs)
+    if isempty(EEG.chanlocs(i).X)
+        continue
+    end
+    for j = 1:length(fields)
+        if isfield(EEG.chanlocs, fields{j})
+            EEG.chanlocs(i).(fields{j}) = round(EEG.chanlocs(i).(fields{j}), 6);
+        end
+    end
+end
 % Overwrite the data if necessary
 if issuedetected && overwritedataset
     fprintf('>> BIDS: Checking channel-locations. Re-saving channel locations.\n')

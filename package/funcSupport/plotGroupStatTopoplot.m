@@ -179,7 +179,7 @@ for i = 1:2
     end
     if ~isempty(cope) && i == 1
         H(i).Ax.CLim = [prctile(cope, 1), prctile(cope, 99)];
-        H(i).Ax.CLim = [-1*max(H(i).Ax.CLim), max(H(i).Ax.CLim)];
+        H(i).Ax.CLim = sort([-1*max(abs(H(i).Ax.CLim)), max(abs(H(i).Ax.CLim))]);
     elseif isempty(cope) || i == 2
         if CLim(1) == Inf && CLim(2) ~= Inf
             H(i).Ax.CLim(2) = CLim(2);

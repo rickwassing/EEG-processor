@@ -48,7 +48,7 @@ else
         case 'Two-sample paired t-test'
             Intercept = [];
         otherwise
-            Intercept = ones(size(Settings.Input, 1), 1);
+            Intercept = ones(size(Settings.input, 1), 1);
     end
     DesMat = [Intercept, ...
         [Settings.model.Predictors.DesMat], ...

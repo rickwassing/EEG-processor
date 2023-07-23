@@ -1,4 +1,11 @@
-function T = remainingTime(T, N)
+function T = remainingTime(T, N, varargin)
+
+if nargin < 3
+    simple = false;
+else
+    simple = varargin{1};
+end
+
 % REMAININGTIME Display the progress and remaining time for loops
 if ~isstruct(T)
     t = T;
@@ -18,7 +25,11 @@ SS = floor(((rt*24-HH)*60-MM)*60);
 rt = [addLeadingZero(num2str(HH)) ':' addLeadingZero(num2str(MM)) ':' addLeadingZero(num2str(SS))];
 pct = floor(100*(T.cnt/N));
 
-fprintf([repmat('\b', 1, length(T.str)) '(%.0f%%) %s '], pct, rt)
+if simple
+    fprintf('(%.0f%%) %s\n', pct, rt)
+else
+    fprintf([repmat('\b', 1, length(T.str)) '(%.0f%%) %s '], pct, rt)
+end
 
 T.str = sprintf('(%.0f%%) %s ', pct, rt);
 

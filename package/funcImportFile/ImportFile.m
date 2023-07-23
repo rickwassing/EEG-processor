@@ -1,7 +1,7 @@
 function [ArgOut, Next, Warnings] = ImportFile(Import)
 % Initialize warnings
 Next = ''; %#ok<NASGU> 
-Warnings = {};
+Warnings = [];
 % -------------------------------------------------------------------------
 % Check if files exist
 disp('>> BIDS: Checking validity of paths')

@@ -6,7 +6,7 @@ warnmsg = [];
 % Check if Hypnogram events exist already, if so, overwrite them
 if isstruct(EEG.event)
     if isfield(EEG.event, 'type')
-        idx = ismember({EEG.event.type}, {'1', '2', '3', 'N1', 'N2', 'N3', 'S1', 'S2', 'S3', 'NREM1', 'NREM2', 'NREM3', 'R', 'REM', 'W', 'Wake', 'WAKE', 'NS'});
+        idx = ismember(lower({EEG.event.type}), {'1', '2', '3', 'n1', 'n2', 'n3', 's1', 's2', 's3', 'nrem1', 'nrem2', 'nrem3', 'r', 'rem', 'w', 'wake', 'ns'});
         if any(idx)
             warnmsg = 'Hypnogram events have been overwritten';
             EEG.event(idx) = [];
