@@ -145,13 +145,21 @@ F = Settings.Statistics.Ftests;
 InputFileDir = [Settings.OutputDir, filesep, 'input'];
 OutputFileDir = [Settings.OutputDir, filesep, 'output'];
 if exist(InputFileDir, 'dir') == 0
-    [status, cmdout] = system(['mkdir "', InputFileDir, '"']);
+    if ispc
+        [status, cmdout] = system(['mkdir "', InputFileDir, '"']);
+    else
+        [status, cmdout] = system(['mkdir -p "', InputFileDir, '"']);
+    end
     if status ~= 0
         error(cmdout);
     end
 end
 if exist(OutputFileDir, 'dir') == 0
-    [status, cmdout] = system(['mkdir "', OutputFileDir, '"']);
+    if ispc
+        [status, cmdout] = system(['mkdir "', OutputFileDir, '"']);
+    else
+        [status, cmdout] = system(['mkdir -p "', OutputFileDir, '"']);
+    end
     if status ~= 0
         error(cmdout);
     end
