@@ -19,6 +19,12 @@ if ~isfield(Settings, 'result')
     switch Settings.ModelType
         case 'Two-sample paired t-test'
             Intercept = [];
+        case 'General Linear Model'
+            if contains(Settings.Model.ModelSpec, '~ 1')
+                Intercept = ones(size(Settings.Input, 1), 1);
+            else
+                Intercept = [];
+            end
         otherwise
             Intercept = ones(size(Settings.Input, 1), 1);
     end
@@ -47,6 +53,12 @@ else
     switch Settings.modeltype
         case 'Two-sample paired t-test'
             Intercept = [];
+        case 'General Linear Model'
+            if contains(Settings.model.ModelSpec, '~ 1 +')
+                Intercept = ones(size(Settings.input, 1), 1);
+            else
+                Intercept = [];
+            end
         otherwise
             Intercept = ones(size(Settings.input, 1), 1);
     end
@@ -74,7 +86,7 @@ else
     GLM.filepath = fullfile(Settings.OutputDir, 'glm.mat');
     GLM.command = '';
     if isnan(overwriteSeed)
-        GLM.seed = round((now - datenum('2023-01-01'))*24*60*60);
+        GLM.seed = round((now() - datenum('2023-01-01'))*24*60*60); %#ok<DATNM,TNOW1>
     else
         GLM.seed = overwriteSeed;
     end
@@ -88,9 +100,9 @@ else
 end
 % --------------------------------------------------
 % Read all input data files
-D = struct();
+Data = struct();
 for i = 1:size(GLM.input, 1)
-    D(i).EEG = LoadDataset(GLM.input.Path{i}, 'all');
+    Data(i).EEG = LoadDataset(GLM.input.Path{i}, 'all');
 end
 % --------------------------------------------------
 % Depending on the type of input file, extract the dependent variable
@@ -98,25 +110,29 @@ DepVars = struct();
 switch GLM.inputfiletype
     case 'powerspect'
         % Find which frequency bands were common across all files
-        if any(arrayfun(@(d) size(d.EEG.bands(1).data, 2), D) > 1)
+        if any(arrayfun(@(d) size(d.EEG.bands(1).data, 2), Data) > 1)
             fprintf('>> BIDS: **************************************************\n')
             fprintf('>> BIDS: WARNING\n')
             fprintf('>> BIDS: Group-level analysis on data with more than 1 trial is not yet supported.\n')
             fprintf('>> BIDS: The PSD values will be averaged across trials.\n')
             fprintf('>> BIDS: **************************************************\n')
         end
-        types = {D(1).EEG.bands.type};
-        bands = {D(1).EEG.bands.label};
+        types = {Data(1).EEG.bands.type};
+        bands = {Data(1).EEG.bands.label};
         labels = cellfun(@(t, b) [t, ' ', b], types, bands, 'UniformOutput', false);
-        for i = 2:length(D)
-            this_labels = cellfun(@(t, b) [t, ' ', b], {D(i).EEG.bands.type}, {D(i).EEG.bands.label}, 'UniformOutput', false);
+        for i = 2:length(Data)
+            this_labels = cellfun(@(t, b) [t, ' ', b], {Data(i).EEG.bands.type}, {Data(i).EEG.bands.label}, 'UniformOutput', false);
             labels = labels(ismember(labels, this_labels));
         end
         % Extract the dependent variable matrix for each frequency band
         for i = 1:length(labels)
             DepVars(i).label = labels{i};
-            tmp = arrayfun(@(d) mean(d.EEG.bands(i).data, 2), D, 'UniformOutput', false);
-            DepVars(i).value = cat(2, tmp{:})';
+            tmp = arrayfun(@(d) mean(d.EEG.bands(i).data, 2), Data, 'UniformOutput', false);
+            if contains(labels{i}, 'absolute')
+                DepVars(i).value = log2(cat(2, tmp{:}))';
+            else
+                DepVars(i).value = cat(2, tmp{:})';
+            end
         end
 end
 % --------------------------------------------------
@@ -240,6 +256,7 @@ params.Cstat ='';
 params.tfce = '';
 params.tfce_H = '';
 params.tfce_E = '';
+params.tfce_C = '';
 switch Settings.PostStats.Method
     case 'ClusterExtent'
         params.Cstat = '-Cstat extent ';
@@ -249,13 +266,11 @@ switch Settings.PostStats.Method
         params.tfce = '-T ';
         params.tfce_H = sprintf('-tfce_H %.2f ', Settings.PostStats.TFCE_H);
         params.tfce_E = sprintf('-tfce_E %.2f ', Settings.PostStats.TFCE_E);
+        params.tfce_C = '-tfce_C 6 ';
 end
 % --------------------------------------------------
 % Cluster-forming threshold
 params.C_t = struct([]);
-% Calculate DOF
-dof1 = size(DesMat, 2);
-dof2 = size(DesMat, 1) - dof1;
 % Set argument
 switch Settings.PostStats.Method
     case {'ClusterExtent', 'ClusterMass'}
@@ -312,6 +327,7 @@ for i = 1:length(Tcons)
         params.tfce, ...
         params.tfce_H, ...
         params.tfce_E, ...
+        params.tfce_C, ...
         params.within, ...
         params.whole, ...
         params.twotail, ...
@@ -348,6 +364,7 @@ if ~isempty(params.f)
         params.tfce, ...
         params.tfce_H, ...
         params.tfce_E, ...
+        params.tfce_C, ...
         params.within, ...
         params.whole, ...
         params.seed, ...
@@ -411,42 +428,51 @@ for i = 1:length(GLM.data)
         GLM.result(i).t(j).varcope = asrow(readmatrix(fname, 'Delimiter', ','));
         % --------------------------------------------------
         % Save the t-statistic
+        Stat = 'T';
         fname = fullfile(OutputFileDir, sprintf('palm_tstat%i_%s_tstat_m%i_d1_c1.csv', j, unit, i));
+        if exist(fname, 'file') == 0
+            Stat = 'V';
+            fname = fullfile(OutputFileDir, sprintf('palm_tstat%i_%s_vstat_m%i_d1_c1.csv', j, unit, i));
+        end
         GLM.result(i).t(j).stat = asrow(readmatrix(fname, 'Delimiter', ','));
         % --------------------------------------------------
         % Save the uncorrected p-value
-        GLM.result(i).t(j).p_unc = get_pvalue(Settings, 'T', 'p_unc', unit, i, j);
+        [~, GLM.result(i).t(j).p_unc] = get_pvalue(Settings, Stat, 'p_unc', unit, i, j);
         % --------------------------------------------------
         % Save the FWE corrected p-value
-        GLM.result(i).t(j).p_fwe = get_pvalue(Settings, 'T', 'p_fwe', unit, i, j);
+        [~, GLM.result(i).t(j).p_fwe] = get_pvalue(Settings, Stat, 'p_fwe', unit, i, j);
         % --------------------------------------------------
         % Save the permutation corrected p-value
         switch GLM.poststats.Method
             case 'TFCE'
-                GLM.result(i).t(j).p_perm = get_pvalue(Settings, 'T', 'p_fwe', 'tfce', i, j);
+                [GLM.result(i).t(j).t_perm, GLM.result(i).t(j).p_perm] = get_pvalue(Settings, Stat, 'p_fwe', 'tfce', i, j);
                 GLM.result(i).t(j).p_fdr = NaN;
                 GLM.result(i).t(j).cluster = struct([]);
             case 'ClusterMass'
-                GLM.result(i).t(j).p_perm = get_pvalue(Settings, 'T', 'p_fwe', 'clusterm', i, j);
+                [GLM.result(i).t(j).t_perm, GLM.result(i).t(j).p_perm] = get_pvalue(Settings, Stat, 'p_fwe', 'clusterm', i, j);
                 GLM.result(i).t(j).p_fdr = NaN;
                 GLM.result(i).t(j).cluster = get_cluster(...
+                    GLM.result(i).t(j).t_perm, ...
                     GLM.result(i).t(j).p_perm, ...
                     GLM.poststats.ClusterAlpha, ...
                     GLM.surface, ...
                     GLM.chanlocs);
             case 'ClusterExtent'
-                GLM.result(i).t(j).p_perm = get_pvalue(Settings, 'T', 'p_fwe', 'clustere', i, j);
+                [GLM.result(i).t(j).t_perm, GLM.result(i).t(j).p_perm] = get_pvalue(Settings, Stat, 'p_fwe', 'clustere', i, j);
                 GLM.result(i).t(j).p_fdr = NaN;
                 GLM.result(i).t(j).cluster = get_cluster(...
+                    GLM.result(i).t(j).t_perm, ...
                     GLM.result(i).t(j).p_perm, ...
                     GLM.poststats.ClusterAlpha, ...
                     GLM.surface, ...
                     GLM.chanlocs);
             case 'FDR'
+                GLM.result(i).t(j).t_perm = NaN;
                 GLM.result(i).t(j).p_perm = NaN;
-                GLM.result(i).t(j).p_fdr = get_pvalue(Settings, 'T', 'p_fdr', 'dat', i, j);
+                [~, GLM.result(i).t(j).p_fdr] = get_pvalue(Settings, Stat, 'p_fdr', 'dat', i, j);
                 GLM.result(i).t(j).cluster = struct([]);
             otherwise
+                GLM.result(i).t(j).t_perm = NaN;
                 GLM.result(i).t(j).p_perm = NaN;
                 GLM.result(i).t(j).p_fdr = NaN;
                 GLM.result(i).t(j).cluster = struct([]);
@@ -464,38 +490,42 @@ for i = 1:length(GLM.data)
         GLM.result(i).f(j).stat = asrow(readmatrix(fname, 'Delimiter', ','));
         % --------------------------------------------------
         % Save the uncorrected p-value
-        GLM.result(i).f(j).p_unc = get_pvalue(Settings, 'F', 'p_unc', unit, i, j);
+        [~, GLM.result(i).f(j).p_unc] = get_pvalue(Settings, 'F', 'p_unc', unit, i, j);
         % --------------------------------------------------
         % Save the FWE corrected p-value
-        GLM.result(i).f(j).p_fwe = get_pvalue(Settings, 'F', 'p_fwe', unit, i, j);
+        [~, GLM.result(i).f(j).p_fwe] = get_pvalue(Settings, 'F', 'p_fwe', unit, i, j);
         % --------------------------------------------------
         % Save the permutation corrected p-value
         switch Settings.PostStats.Method
             case 'TFCE'
-                GLM.result(i).f(j).p_perm = get_pvalue(Settings, 'F', 'p_fwe', 'tfce', i, j);
+                [GLM.result(i).f(j).f_perm, GLM.result(i).f(j).p_perm] = get_pvalue(Settings, 'F', 'p_fwe', 'tfce', i, j);
                 GLM.result(i).f(j).p_fdr = NaN;
                 GLM.result(i).f(j).cluster = struct([]);
             case 'ClusterMass'
-                GLM.result(i).f(j).p_perm = get_pvalue(Settings, 'F', 'p_fwe', 'clusterm', i, j);
+                [GLM.result(i).f(j).f_perm, GLM.result(i).f(j).p_perm] = get_pvalue(Settings, 'F', 'p_fwe', 'clusterm', i, j);
                 GLM.result(i).f(j).p_fdr = NaN;
                 GLM.result(i).f(j).cluster = get_cluster(...
+                    GLM.result(i).f(j).f_perm, ...
                     GLM.result(i).f(j).p_perm, ...
                     GLM.poststats.ClusterAlpha, ...
                     GLM.surface, ...
                     GLM.chanlocs);
             case 'ClusterExtent'
-                GLM.result(i).f(j).p_perm = get_pvalue(Settings, 'F', 'p_fwe', 'clustere', i, j);
+                [GLM.result(i).f(j).f_perm, GLM.result(i).f(j).p_perm] = get_pvalue(Settings, 'F', 'p_fwe', 'clustere', i, j);
                 GLM.result(i).f(j).p_fdr = NaN;
                 GLM.result(i).f(j).cluster = get_cluster(...
+                    GLM.result(i).f(j).f_perm, ...
                     GLM.result(i).f(j).p_perm, ...
                     GLM.poststats.ClusterAlpha, ...
                     GLM.surface, ...
                     GLM.chanlocs);
             case 'FDR'
+                GLM.result(i).f(j).f_perm = NaN;
                 GLM.result(i).f(j).p_perm = NaN;
-                GLM.result(i).f(j).p_fdr = get_pvalue(Settings, 'F', 'p_fdr', 'dat', i, j);
+                [~, GLM.result(i).f(j).p_fdr] = get_pvalue(Settings, 'F', 'p_fdr', 'dat', i, j);
                 GLM.result(i).f(j).cluster = struct([]);
             otherwise
+                GLM.result(i).f(j).f_perm = NaN;
                 GLM.result(i).f(j).p_perm = NaN;
                 GLM.result(i).f(j).p_fdr = NaN;
                 GLM.result(i).f(j).cluster = struct([]);
@@ -505,7 +535,7 @@ end
 % --------------------------------------------------
 % Make the mat file, the figures and the HTML report and open it in the browser
 save(GLM.filepath, 'GLM', '-v7.3');
-GroupAnalysis_plot(GLM);
+if doRun; GroupAnalysis_plot(GLM); end
 GroupAnalysis_htmlreport(GLM);
 
 end

@@ -33,7 +33,7 @@ app.RenderWaitbar('Scanning for files in your database', -1);
 startTime = now();
 for i = 1:length(Extensions)
     % Scan for raw files
-    RawFiles = [RawFiles; dir(fullfile(app.State.Protocol.Path, 'rawdata', 'sub-*', '**', ['sub-*', Extensions{i}]))]; %#ok<AGROW> 
+    RawFiles = [RawFiles; dir(fullfile(app.State.Protocol.Path, 'rawdata', 'sub-*', '**', ['sub-*_eeg', Extensions{i}]))]; %#ok<AGROW> 
     % Loop through the derivative modalities and scan for files in each sub-directory
     Modalities = dir([app.State.Protocol.Path, '/derivatives']);
     for j = 1:length(Modalities)
