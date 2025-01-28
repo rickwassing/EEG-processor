@@ -29,6 +29,11 @@ TopoplotStyle = 'map';
 ShowColorbar = true;
 outpath = './group_analysis.png';
 doSave = false;
+doUnc = true;
+doPermNonsig = true;
+doPermSig = true;
+doNumbers = true;
+doJoints = true;
 CLim = NaN;
 clusters = struct();
 clusters(1) = [];
@@ -82,6 +87,16 @@ if nargin > 8
                 outpath = Value;
             case 'dosave'
                 doSave = Value;
+            case 'douncorr'
+                doUnc = varargin{i+1};
+            case 'dopermnonsig'
+                doPermNonsig = varargin{i+1};
+            case 'dopermsig'
+                doPermSig = varargin{i+1};
+            case 'donumbers'
+                doNumbers = varargin{i+1};
+            case 'dojoints'
+                doJoints = varargin{i+1};
             case 'clusters'
                 clusters = Value;
         end
@@ -154,11 +169,19 @@ for i = 1:2
         ];
     % --------------------------------------------------
     % Update the X, Y, and Z data for the significant channels (uncorrected)
-    idx = p_unc <= t_unc;
+    if doUnc
+        idx = p_unc <= t_unc;
+    else
+        idx = p_unc <= -1;
+    end
     H(i).UncMarker.XData = H(i).ChanLocs(idx, 1);
     H(i).UncMarker.YData = H(i).ChanLocs(idx, 2);
     H(i).UncMarker.ZData = H(i).ChanLocs(idx, 3);
-    idx = p_cor <= t_cor;
+    if doPermSig || doPermNonsig
+        idx = p_cor <= t_cor;
+    else
+        idx = p_cor <= -1;
+    end
     H(i).PermMarker.XData = H(i).ChanLocs(idx, 1);
     H(i).PermMarker.YData = H(i).ChanLocs(idx, 2);
     H(i).PermMarker.ZData = H(i).ChanLocs(idx, 3);
@@ -197,12 +220,14 @@ for i = 1:2
             nb(~ismember(nb, idx)) = [];
             XData = nan;
             YData = nan;
-            for l = 1:length(nb)
-                XData = [XData, H(i).ChanLocs(idx(k), 1), H(i).ChanLocs(nb(l), 1), nan];
-                YData = [YData, H(i).ChanLocs(idx(k), 2), H(i).ChanLocs(nb(l), 2), nan];
+            if (clusters(j).issig && doPermSig) || (~clusters(j).issig && doPermNonsig)
+                for l = 1:length(nb)
+                    XData = [XData, H(i).ChanLocs(idx(k), 1), H(i).ChanLocs(nb(l), 1), nan];
+                    YData = [YData, H(i).ChanLocs(idx(k), 2), H(i).ChanLocs(nb(l), 2), nan];
+                end
             end
             H(i).Cluster(j).Patch(k) = patch(H(i).Ax, XData, YData, [1, 1, 1], ...
-                'LineStyle', '-', ...
+                'LineStyle', ifelse(doJoints, '-', 'none'), ...
                 'LineWidth', 1, ...
                 'Marker', '.', ...
                 'MarkerSize', UncMarkerSize, ...
@@ -210,19 +235,21 @@ for i = 1:2
                 'EdgeColor', ifelse(clusters(j).issig, 'w', 'k'), ...
                 'EdgeAlpha', 0.5);
         end
-        [~, clustlabelidx] = min((H(i).ChanLocs(idx, 1)-mean(H(i).ChanLocs(idx, 1))).^2 + (H(i).ChanLocs(idx, 2)-mean(H(i).ChanLocs(idx, 2))).^2);
-        XData = H(i).ChanLocs(idx(clustlabelidx), 1);
-        YData = H(i).ChanLocs(idx(clustlabelidx), 2);
-        Theta = cart2pol(XData, YData);
-        [XData, YData] = pol2cart(Theta, 0.525);
-        H(i).Cluster(j).Text = text(H(i).Ax, XData, YData, 1, sprintf('%i', j), ...
-            'FontSize', 8, ...
-            'FontAngle', 'italic', ...
-            'FontWeight', 'bold', ...
-            'HorizontalAlignment', 'center', ...
-            'VerticalAlignment', 'middle', ...
-            'Color', [0.25 0.25 0.25]);
-        plot(H(i).Ax, [XData, H(i).ChanLocs(idx(clustlabelidx), 1)], [YData, H(i).ChanLocs(idx(clustlabelidx), 2)], '-k')
+        if doNumbers
+            [~, clustlabelidx] = min((H(i).ChanLocs(idx, 1)-mean(H(i).ChanLocs(idx, 1))).^2 + (H(i).ChanLocs(idx, 2)-mean(H(i).ChanLocs(idx, 2))).^2);
+            XData = H(i).ChanLocs(idx(clustlabelidx), 1);
+            YData = H(i).ChanLocs(idx(clustlabelidx), 2);
+            Theta = cart2pol(XData, YData);
+            [XData, YData] = pol2cart(Theta, 0.525);
+            H(i).Cluster(j).Text = text(H(i).Ax, XData, YData, 1, sprintf('%i', j), ...
+                'FontSize', 8, ...
+                'FontAngle', 'italic', ...
+                'FontWeight', 'bold', ...
+                'HorizontalAlignment', 'center', ...
+                'VerticalAlignment', 'middle', ...
+                'Color', [0.25 0.25 0.25]);
+            plot(H(i).Ax, [XData, H(i).ChanLocs(idx(clustlabelidx), 1)], [YData, H(i).ChanLocs(idx(clustlabelidx), 2)], '-k')
+        end
     end
 end
 if ~isempty(cope)
