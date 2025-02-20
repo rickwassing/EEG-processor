@@ -31,10 +31,23 @@ classdef EEG_Processor < matlab.apps.AppBase
         function createComponents(app)
             % Create EEGProcessorUIFigure and hide until all components are created
             app.UIFigure = uifigure('Visible', 'off');
-            app.UIFigure.Position = [100 100 640 480];
-            app.UIFigure.Name = 'EEG-Processor';
+            app.UIFigure.Name = 'EEG Processor';
+            app.setPosition();
+            % Add the path
+            app.addMatlabPath();
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
+        end
+        % Places the interface nicely on the screen
+        function setPosition(app)
+            g = groot();
+            h = g.ScreenSize(4)-100;
+            app.UIFigure.Position = [1, 100, 500, h];
+        end
+        % Add the full package to the Matlab path
+        function addMatlabPath(app)
+            path = fileparts(mfilename('fullpath'));
+            addpath(genpath([path, filesep, 'package']))
         end
     end
     % App creation and deletion
@@ -51,7 +64,7 @@ classdef EEG_Processor < matlab.apps.AppBase
                 registerApp(app, app.UIFigure)
             else % already running
                 % Focus the running singleton app
-                figure(runningApp.EEGProcessorUIFigure)
+                figure(runningApp.UIFigure)
                 app = runningApp;
             end
         end
