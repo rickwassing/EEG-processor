@@ -26,6 +26,7 @@ classdef slice_db < handle
         function obj = slice_db(app_path)
             % -------------------------------------------------------------
             % Initialize state
+            obj.state.app_path = app_path;
             fprintf('[%s] initialising slice: database.\n', char(datetime(), 'HH:mm:ss'))
             if exist(fullfile(app_path, 'package', 'app', 'db', 'app.json'), 'file') ~= 2
                 obj.state.app = obj.initdb(app_path);
@@ -49,31 +50,61 @@ classdef slice_db < handle
             struct2json(s, fullfile(app_path, 'package', 'app', 'db', 'app.json'));
         end
         % -----------------------------------------------------------------
-        function state = view(obj, key)
+        function save(obj, slice)
+            struct2json(obj.state.(slice), fullfile(obj.state.app_path, 'package', 'app', 'db', sprintf('%s.json', lower(slice))));
+        end
+        % -----------------------------------------------------------------
+        function state = view(obj, slice)
             try
-                % Check to see this field exists
-                if ~isprop(obj, key)
-                    error('The field ''%s'' does not exist in the ''auth'' slice.')
-                end
                 % Execute middleware
-                app_store.getInstance().applyMiddleware('auth', 'view');
+                app_store.getInstance().execMiddleware('db', 'view');
                 % If no error was thrown, all is ok and we can return the value
-                state = obj.(lower(key));
+                state = obj.(lower(slice));
             catch ME
                 printerrormessage(ME, sprintf('The error occurred during ''view'' in %s.', mfilename('class')))
             end
         end
         % -----------------------------------------------------------------
-        function update(obj, key, val)
+        function obj = update(obj, slice, key, val)
             try
-                % Check to see this field exists
-                if ~isprop(obj, key)
-                    error('The field ''%s'' does not exist in the ''ui'' slice.')
+                % Execute middleware
+                app_store.getInstance().execMiddleware('db', 'update', 'PrevState', obj.state.(slice).(key), 'NewState', val);
+                % If no error was thrown, all is ok and we can return the state
+                obj.state.(slice).(key) = val;
+                % Write the updates to file
+                obj.save(slice);
+            catch ME
+                printerrormessage(ME, sprintf('The error occurred during ''update'' in %s.', mfilename('class')))
+            end
+        end
+        % -----------------------------------------------------------------
+        function obj = insert(obj, slice, key, val, varargin)
+            try
+                % Parse the variable arguments in
+                props = parsevarargin(varargin);
+                if ~isfield(props, 'makeunique')
+                    props.makeunique = false;
+                end
+                if ~isfield(props, 'croplimit')
+                    props.croplimit = -1;
+                end
+                % Initialize the field if it does not exist yet
+                if ~isfield(obj.state.(slice), key)
+                    obj.state.(slice).(key) = [];
                 end
                 % Execute middleware
-                app_store.getInstance().applyMiddleware('auth', 'update', 'PrevState', obj.(key), 'NewState', val);
+                app_store.getInstance().execMiddleware('db', 'insert', 'PrevState', obj.state.(slice).(key), 'NewState', val);
                 % If no error was thrown, all is ok and we can return the state
-                obj.(key) = val;
+                obj.state.(slice).(key) = [val; ascolumn(obj.state.(slice).(key))];
+                if props.makeunique
+                    obj.state.(slice).(key) = unique(obj.state.(slice).(key), 'stable');
+                end
+                if props.croplimit > 0
+                    props.croplimit = min([numel(obj.state.(slice).(key)), props.croplimit]);
+                    obj.state.(slice).(key) = obj.state.(slice).(key)(1:props.croplimit);
+                end
+                % Write the updates to file
+                obj.save(slice);
             catch ME
                 printerrormessage(ME, sprintf('The error occurred during ''update'' in %s.', mfilename('class')))
             end

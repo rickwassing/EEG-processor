@@ -1,5 +1,8 @@
 {
   "style": {
+    "logo": {
+      "height": 40
+    },
     "colors": {
       "background": {
         "primary": "#F3F6FC",
@@ -9,7 +12,7 @@
         "warning": "#FFF3CD",
         "info": "#CFF419",
         "light": "#FCFCFD",
-        "dark": "#CED4DA"
+        "dark": "#7D7D7D"
       },
       "button": {
         "primary": "#0D6BF5",
@@ -31,6 +34,11 @@
         "light": "#495057",
         "dark": "#212529"
       }
+    },
+    "borders": {
+      "color": "#E3E4E5",
+      "type": "line",
+      "width": 1
     },
     "spacing": {
       "none": 0,

@@ -36,14 +36,21 @@ classdef slice_ds < handle
     % Methods for getting and setting the state
     methods
         % -----------------------------------------------------------------
+        function obj = updatePath(obj, path)
+            try
+                % Execute middleware
+                app_store.getInstance().execMiddleware('ds', 'update');
+                % If no error was thrown, all is ok and we can return the value
+                obj.path = path;
+            catch ME
+                printerrormessage(ME, sprintf('The error occurred during ''setPath'' in %s.', mfilename('class')))
+            end
+        end
+        % -----------------------------------------------------------------
         function state = viewOneById(obj, id)
             try
-                % Check to see this field exists
-                if ~isprop(obj, id)
-                    error('The entity ''%s'' does not exist in the ''ds'' slice.')
-                end
                 % Execute middleware
-                app_store.getInstance().applyMiddleware('ds', 'view', 'id', id);
+                app_store.getInstance().execMiddleware('ds', 'view', 'id', id);
                 % If no error was thrown, all is ok and we can return the value
                 state = obj.(lower(id));
             catch ME
@@ -53,12 +60,8 @@ classdef slice_ds < handle
         % -----------------------------------------------------------------
         function updateOneById(obj, id, newFile)
             try
-                % Check to see this field exists
-                if ~isprop(obj, id)
-                    error('The entity ''%s'' does not exist in the ''ds'' slice.')
-                end
                 % Execute middleware
-                app_store.getInstance().applyMiddleware('ds', 'update', 'id', id);
+                app_store.getInstance().execMiddleware('ds', 'update', 'id', id);
                 % If no error was thrown, all is ok and we can return the state
                 obj.(id) = newFile;
             catch ME

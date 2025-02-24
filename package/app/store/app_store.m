@@ -27,7 +27,7 @@ classdef app_store < handle
     end
     % =====================================================================
     % Event list
-    properties (Access = private, Transient, NonCopyable)
+    events
         uiChanged;
         authChanged;
         dbChanged;

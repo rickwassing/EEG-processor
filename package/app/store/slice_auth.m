@@ -36,12 +36,8 @@ classdef slice_auth < handle
         % -----------------------------------------------------------------
         function state = view(obj, key)
             try
-                % Check to see this field exists
-                if ~isprop(obj, key)
-                    error('The field ''%s'' does not exist in the ''auth'' slice.')
-                end
                 % Execute middleware
-                app_store.getInstance().applyMiddleware('auth', 'view');
+                app_store.getInstance().execMiddleware('auth', 'view');
                 % If no error was thrown, all is ok and we can return the value
                 state = obj.(lower(key));
             catch ME
@@ -51,12 +47,8 @@ classdef slice_auth < handle
         % -----------------------------------------------------------------
         function update(obj, key, val)
             try
-                % Check to see this field exists
-                if ~isprop(obj, key)
-                    error('The field ''%s'' does not exist in the ''ui'' slice.')
-                end
                 % Execute middleware
-                app_store.getInstance().applyMiddleware('auth', 'update', 'PrevState', obj.(key), 'NewState', val);
+                app_store.getInstance().execMiddleware('auth', 'update', 'PrevState', obj.(key), 'NewState', val);
                 % If no error was thrown, all is ok and we can return the state
                 obj.(key) = val;
             catch ME
