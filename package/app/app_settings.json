@@ -15,7 +15,7 @@
         "dark": "#7D7D7D"
       },
       "button": {
-        "primary": "#0D6BF5",
+        "primary": "#0070C0",
         "secondary": "#666E76",
         "success": "#177A4C",
         "error": "#CA303F",
@@ -32,6 +32,10 @@
         "warning": "#664D03",
         "info": "#055160",
         "light": "#495057",
+        "dark": "#212529"
+      },          
+      "buttontext": {
+        "light": "#F3F6FC",
         "dark": "#212529"
       }
     },

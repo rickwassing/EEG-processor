@@ -46,7 +46,7 @@ classdef EEG_Processor < matlab.apps.AppBase
             app.comps.UIFigure.Name = 'EEG Processor';
             % Create grid layout
             app.comps.GridLayout = uigridlayout(app.comps.UIFigure, ...
-                'ColumnWidth', {168, '1x'}, ...
+                'ColumnWidth', {168, '1x', 'fit'}, ...
                 'RowHeight', {'1x'}, ...
                 'Padding', 0, ...
                 'ColumnSpacing', 0, ...
@@ -74,95 +74,6 @@ classdef EEG_Processor < matlab.apps.AppBase
                 'getdir', @() getdir(app));
             app.comps.Body.Layout.Row = 1;
             app.comps.Body.Layout.Column = 2;
-
-
-            %% Create TopRightPanel 
-            app.comps.TopRightPanel= uigridlayout(app.comps.GridLayout,...
-                'ColumnWidth', {'1x', 'fit'}, ... % Textbox expands, button fits
-                'RowHeight', {'fit'}, ...
-                'Padding', [10 10 10 10], ...
-                'ColumnSpacing', 5, ...
-                'RowSpacing', 5);
-            app.comps.TopRightPanel.Layout.Row=1;
-            app.comps.TopRightPanel.Layout.Column=3;
-            
-            %% Create Name Input Field
-            app.comps.NameEditField = uieditfield(app.comps.TopRightPanel, 'text');
-            app.comps.NameEditField.Placeholder = 'Enter your name';
-
-
-        end
-
-
-        % ---------------------------------------------------------
-        % METHOD: Update DatasetPathEditField
-        function RenderAuthLabel(app)
-            if app.State.Verbose
-                t = now;
-            end
-            if app.State.Auth.IsAuthorized
-                UpdateProperty(app, app.AuthLabel, 'Text', sprintf('Hi %s!', app.State.Auth.Name));
-            else
-                UpdateProperty(app, app.AuthLabel, 'Text', '');
-            end
-            if app.State.Auth.IsAuthorized
-                UpdateProperty(app, app.AuthButton, 'Text', 'Sign out');
-            else
-                UpdateProperty(app, app.AuthButton, 'Text', 'Sign in');
-            end
-            if app.State.Verbose
-                fprintf('>> BIDS: RenderAuthLabel took %s.\n', duration2str(now-t));
-            end
-        end
-        
-        % Button pushed function: AuthButton
-        function AuthButtonPushed(app, event)
-            try
-                % ---------------------------------------------------------
-                % Disable button to prevent double clicking
-                event.Source.Enable = 'off'; drawnow;
-                % ---------------------------------------------------------
-                % Call the GUI
-                switch lower(event.Source.Text)
-                    case 'sign in'
-                        app.GUIs.SimpleQuestion = SimpleQuestion(app, 'Enter your name please', '');
-                        uiwait(app.GUIs.SimpleQuestion.UIFigure);
-                        % ---------------------------------------------------------
-                        % Check if user pressed cancel
-                        if ~app.Import.Return
-                            event.Source.Enable = 'on';
-                            return
-                        end
-                        % Make sure the value is an alphanumeric string
-                        newValue = lower(regexprep(app.Import.Data.Answer, '[^a-zA-Z0-9]', ''));
-                        newValue(1) = upper(newValue(1));
-                    case 'sign out'
-                        newValue = '';
-                end
-                % ---------------------------------------------------------
-                % SET STATE
-                if isempty(newValue)
-                    app.State.Auth.IsAuthorized = false;
-                    app.State.Auth.Name = '';
-                else
-                    app.State.Auth.IsAuthorized = true;
-                    app.State.Auth.Name = newValue;
-                end
-                % ---------------------------------------------------------
-                % RENDER
-                app.RenderAuthLabel();
-                % ---------------------------------------------------------
-                % Reset is loading
-                event.Source.Enable = 'on';
-            catch ME
-                % ---------------------------------------------------------
-                % Catch and print any errors
-                printME(ME);
-                app.RenderErrorMessage('A critical error occurred. See the command window for more information.');
-                app.SetLoading(false, []);
-                app.RenderWaitbar([]);
-                event.Source.Enable = 'on';
-            end
         end
 
         % -----------------------------------------------------------------
@@ -259,55 +170,3 @@ classdef EEG_Processor < matlab.apps.AppBase
         end
     end
 end
-
-
-
-        % Button pushed function: AuthButton
-        function AuthButtonPushed(app, event)
-            try
-                % ---------------------------------------------------------
-                % Disable button to prevent double clicking
-                event.Source.Enable = 'off'; drawnow;
-                % ---------------------------------------------------------
-                % Call the GUI
-                switch lower(event.Source.Text)
-                    case 'sign in'
-                        app.GUIs.SimpleQuestion = SimpleQuestion(app, 'Enter your name please', '');
-                        uiwait(app.GUIs.SimpleQuestion.UIFigure);
-                        % ---------------------------------------------------------
-                        % Check if user pressed cancel
-                        if ~app.Import.Return
-                            event.Source.Enable = 'on';
-                            return
-                        end
-                        % Make sure the value is an alphanumeric string
-                        newValue = lower(regexprep(app.Import.Data.Answer, '[^a-zA-Z0-9]', ''));
-                        newValue(1) = upper(newValue(1));
-                    case 'sign out'
-                        newValue = '';
-                end
-                % ---------------------------------------------------------
-                % SET STATE
-                if isempty(newValue)
-                    app.State.Auth.IsAuthorized = false;
-                    app.State.Auth.Name = '';
-                else
-                    app.State.Auth.IsAuthorized = true;
-                    app.State.Auth.Name = newValue;
-                end
-                % ---------------------------------------------------------
-                % RENDER
-                app.RenderAuthLabel();
-                % ---------------------------------------------------------
-                % Reset is loading
-                event.Source.Enable = 'on';
-            catch ME
-                % ---------------------------------------------------------
-                % Catch and print any errors
-                printME(ME);
-                app.RenderErrorMessage('A critical error occurred. See the command window for more information.');
-                app.SetLoading(false, []);
-                app.RenderWaitbar([]);
-                event.Source.Enable = 'on';
-            end
-        end
