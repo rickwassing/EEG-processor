@@ -117,6 +117,10 @@ classdef EEG_Processor < matlab.apps.AppBase
             end
         end
     end
+    
+    
+    
+    
     % =====================================================================
     % PUBLIC METHODS
     methods (Access = public)
@@ -167,6 +171,47 @@ classdef EEG_Processor < matlab.apps.AppBase
             clear app_store;
             % Delete UIFigure when app is deleted
             delete(app.comps.UIFigure)
+        end
+
+
+%% oct: to add this func to the public?:
+        % =========================================================
+        % APP METHODS: SET PROPERTIES OF OBJECTS
+        % ---------------------------------------------------------
+        % METHOD: Sets the waitbar
+        function RenderWaitbar(app, Message, Value)
+            if isempty(Message)
+                app.Waitbar = [];
+                drawnow;
+                return
+            end
+            if isempty(app.Waitbar)
+                app.Waitbar = uiprogressdlg(app.UIFigure);
+                app.Waitbar.Title = 'Cogwheels are turning, please wait...';
+            end
+            app.Waitbar.Message = Message;
+            if Value == -1
+                app.Waitbar.Indeterminate ='on';
+            else
+                app.Waitbar.Indeterminate = 'off';
+                app.Waitbar.Value = Value;
+            end
+            drawnow;
+        end
+        % ---------------------------------------------------------
+        % METHOD: Sets an error message
+        function RenderErrorMessage(app, Message)
+            if app.State.Verbose
+                t = now; %#ok<*TNOW1>
+            end
+            sel = uiconfirm(app.UIFigure, Message, 'Error', ...
+                'Options',{'Ok'},...
+                'DefaultOption', 'Ok', ...
+                'Icon', 'error'); 
+            drawnow;
+            if app.State.Verbose
+                fprintf('>> BIDS: RenderErrorMessage took %s.\n', duration2str(now-t));
+            end
         end
     end
 end

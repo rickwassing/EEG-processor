@@ -18,6 +18,9 @@ classdef slice_ds < handle
     properties (Access = public)
         path;
         entities;
+        JSON;
+        subjects;
+        files;
     end
     % #####################################################################
     % METHODS
@@ -30,6 +33,9 @@ classdef slice_ds < handle
             fprintf('[%s] initialising slice: dataset.\n', char(datetime(), 'HH:mm:ss'))
             obj.path = '';
             obj.entities = struct([]);
+            obj.JSON = struct([]);
+            obj.subjects = struct([]);
+            obj.files = struct([]);
         end
     end
     % =====================================================================

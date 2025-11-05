@@ -71,11 +71,14 @@ classdef DatabasePanel < matlab.ui.componentcontainer.ComponentContainer
                     'ContextMenu', Obj.comps.RecentsContextMenu, ...
                     'ButtonPushedFcn', @(src, event) Obj.loadDataset(src, event, 'getdir', props.getdir));
                 % Add event listeners
+                
                 store = app_store.getInstance();
                 addlistener(store, 'dsChanged', @(store, event) Obj.update());
+
             catch ME
                 printerrormessage(ME, sprintf('The error occurred during ''setup'' in %s.', mfilename('class')))
             end
+                
         end
         % -----------------------------------------------------------------
         % Update the component, is automatically executed when properties change.
@@ -83,11 +86,42 @@ classdef DatabasePanel < matlab.ui.componentcontainer.ComponentContainer
             try
                 store = app_store.getInstance();
                 Obj.comps.Label.Text = store.ds.path;
+
+                drawnow;
+
                 if isfield(store.db.state.app, 'recent')
                     Obj.renderContextMenuItems(store.db.state.app.recent)
                 else
                     Obj.renderContextMenuItems([])
                 end
+                
+                if exist([store.ds.path, '/rawdata/dataset_description.json'], 'file') ~= 0
+                    store.ds.JSON = json2struct([store.ds.path, '/rawdata/dataset_description.json']);
+                
+                else
+                    %creating the state for json file
+                    NewState = DefaultState(store.ds.path);
+                    store.ds.JSON = NewState.JSON;
+                    store.ds.subjects = NewState.Subjects;
+                    store.ds.files = NewState.Files;
+                end
+        
+                %%it will create only if the bids folders not exist, if they are- it will skip automatically. 
+                
+                if ~isempty(store.ds.path)
+                    cd(store.ds.path);
+                
+                    hasErrors = CreateBIDSDirectories(Obj, store);
+                    if hasErrors
+                        return
+                    end
+    
+                    % Load subjects     
+                    store.ds.subjects = GetSubjects(store);
+                    % Load files
+                    store.ds.files = GetFiles(store);
+                end
+
             catch ME
                 printerrormessage(ME, sprintf('The error occurred during ''update'' in %s.', mfilename('class')))
             end
@@ -122,15 +156,10 @@ classdef DatabasePanel < matlab.ui.componentcontainer.ComponentContainer
                     Obj.comps.RecentsContextItems(i) = [];
                 end
             catch ME
-                printerrormessage(ME, sprintf('The error occurred during ''renderContextMenuItems'' in %s.', mfilename('class')))
+                printerrormessage(ME, sprintf('The error occurred duriMExceptionng ''renderContextMenuItems'' in %s.', mfilename('class')))
             end
         end
-    end
-    % =====================================================================
-    % Private methods with callbacks
-    methods (Access = protected)
-        % -----------------------------------------------------------------
-        % Allows the user to select a folder, and executes callback
+ 
         function loadDataset(Obj, source, event, varargin) %#ok<INUSD>
             try
                 payload = struct();
@@ -141,14 +170,16 @@ classdef DatabasePanel < matlab.ui.componentcontainer.ComponentContainer
                 else
                     % Open interface where the user can select a directory
                     payload.path = props.getdir();
-                    if ispc % Make sure we use forward slashes only
+                    if ispc % Make sure we use forward slashes only -->returns true if you’re running on Windows
                         payload.path = strrep(payload.path, '\', '/');
                     end
                 end
                 % Check if user pressed cancel > show message and return to app
+
                 if payload.path == 0
                     return
                 end
+
                 app_callback(source, event, @ds_updatepath, payload, {'dsChanged'})
             catch ME
                 printerrormessage(ME, sprintf('The error occurred during ''loadDataset'' in %s.', mfilename('class')))
