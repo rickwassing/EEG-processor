@@ -1,3 +1,7 @@
+Thumbs.db
+*.asv
+*.mov
 *.mp4
 ~*
 .DS_Store
+package/app/db/*

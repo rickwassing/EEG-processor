@@ -1,0 +1,6 @@
+[submodule "plugins/eeglab"]
+	path = plugins/eeglab
+	url = https://github.com/sccn/eeglab.git
+[submodule "plugins/fieldtrip"]
+	path = plugins/fieldtrip
+	url = https://github.com/fieldtrip/fieldtrip.git

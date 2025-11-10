@@ -1,0 +1,69 @@
+{
+  "style": {
+    "logo": {
+      "height": 40
+    },
+    "colors": {
+      "background": {
+        "primary": "#F3F6FC",
+        "secondary": "#D8E7FA",
+        "success": "#D1E7DD",
+        "error": "#F8D7DA",
+        "warning": "#FFF3CD",
+        "info": "#CFF419",
+        "light": "#FCFCFD",
+        "dark": "#7D7D7D"
+      },
+      "button": {
+        "primary": "#0D6BF5",
+        "secondary": "#666E76",
+        "success": "#177A4C",
+        "error": "#CA303F",
+        "warning": "#FFCA2E",
+        "info": "#28D0F2",
+        "light": "#E3E4E5",
+        "dark": "#303438"
+      },
+      "text": {
+        "primary": "#052C65",
+        "secondary": "#2B2F32",
+        "success": "#0A3622",
+        "error": "#58151C",
+        "warning": "#664D03",
+        "info": "#055160",
+        "light": "#495057",
+        "dark": "#212529"
+      },
+      "buttontext": {
+        "light": "#F3F6FC",
+        "dark": "#212529"
+      }
+    },
+    "borders": {
+      "color": "#E3E4E5",
+      "type": "line",
+      "width": 1
+    },
+    "spacing": {
+      "none": 0,
+      "xs": 4,
+      "sm": 8,
+      "md": 16,
+      "lg": 24,
+      "xl": 48
+    },
+    "typography": {
+      "base": {
+        "font": "Roboto",
+        "size": 11
+      },
+      "title": {
+        "fontWeight": "bold"
+      },
+      "button": {
+        "fontWeight": "bold",
+        "fontVariant": "all-caps"
+      }
+    }
+  }
+}
