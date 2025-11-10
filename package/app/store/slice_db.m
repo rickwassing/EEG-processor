@@ -1,5 +1,6 @@
 % SLICE_DB
-% Contains the state related to the JSON files stored in ./app/db
+% Contains the state related to the EEG Processor application itself. For
+% example, it contains the 5 most recent database paths.
 %
 % Authors:
 %   Rick Wassing, Woolcock Institute of Medical Research, Sydney, Australia

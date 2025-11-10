@@ -33,6 +33,10 @@
         "info": "#055160",
         "light": "#495057",
         "dark": "#212529"
+      },
+      "buttontext": {
+        "light": "#F3F6FC",
+        "dark": "#212529"
       }
     },
     "borders": {
