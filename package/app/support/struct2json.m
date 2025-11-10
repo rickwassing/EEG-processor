@@ -42,6 +42,13 @@ try
     % Convert structure to JSON string
     jsonData = jsonencode(data, 'PrettyPrint', true);
     
+    % Make sure there are no backslashes and make sure the parent exists
+    filename = strrep(filename, '\', '/');
+    filepath = fileparts(filename);
+    if exist(filepath, 'dir') ~= 2
+        mkdir(filepath)
+    end
+
     % Open the file for writing (create new file or overwrite if exists)
     fid = fopen(filename, 'w');
     if fid == -1

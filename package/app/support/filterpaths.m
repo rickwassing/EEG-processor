@@ -21,8 +21,14 @@
 
 function paths = filterpaths(paths)
 
+% If paths are empty, we can simply return an empty array
+if isempty(paths)
+   return
+end
+
 % Ensure input is a cell array of strings
 if ~iscell(paths) || ~all(cellfun(@ischar, paths))
+    keyboard
     error('Input must be a cell array of character vectors.');
 end
 
