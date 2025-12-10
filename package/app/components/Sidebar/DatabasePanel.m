@@ -4,7 +4,8 @@
 
 % Authors:
 %   Rick Wassing, Woolcock Institute of Medical Research, Sydney, Australia
-%
+%   Sapir Bar, Woolcock Institute of Medical Research, Sydney, Australia
+
 % History:
 %   Created 2025-02-20, Rick Wassing
 
@@ -83,6 +84,7 @@ classdef DatabasePanel < matlab.ui.componentcontainer.ComponentContainer
             try
                 store = app_store.getInstance();
                 Obj.comps.Label.Text = store.ds.path;
+                drawnow;
                 if isfield(store.db.state.app, 'recent')
                     Obj.renderContextMenuItems(store.db.state.app.recent)
                 else
@@ -149,6 +151,17 @@ classdef DatabasePanel < matlab.ui.componentcontainer.ComponentContainer
                 if payload.path == 0
                     return
                 end
+
+        % Bids folders will be created if they are not exist yet, if they are- it will skip automatically.     
+                cd(payload.path);            
+                hasErrors = CreateBIDSDirectories(Obj, payload);
+                if hasErrors
+                    return
+                end
+
+                % Load subjects and files
+                payload.subjects_all= GetSubjects(payload)
+                payload.files_all = GetFiles(payload);                
                 app_callback(source, event, @ds_updatepath, payload, {'dsChanged'})
             catch ME
                 printerrormessage(ME, sprintf('The error occurred during ''loadDataset'' in %s.', mfilename('class')))

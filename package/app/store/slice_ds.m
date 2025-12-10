@@ -3,7 +3,8 @@
 %
 % Authors:
 %   Rick Wassing, Woolcock Institute of Medical Research, Sydney, Australia
-%
+%   Sapir Bar, Woolcock Institute of Medical Research, Sydney, Australia
+
 % History:
 %   Created 2025-02-24, Rick Wassing
 
@@ -18,6 +19,9 @@ classdef slice_ds < handle
     properties (Access = public)
         path;
         entities;
+        JSON;
+        subjects_all;
+        files_all;        
     end
     % #####################################################################
     % METHODS
@@ -30,6 +34,9 @@ classdef slice_ds < handle
             fprintf('[%s] initialising slice: dataset.\n', char(datetime(), 'HH:mm:ss'))
             obj.path = '';
             obj.entities = struct([]);
+            obj.JSON = struct([]);
+            obj.subjects_all = struct([]);
+            obj.files_all = struct([]);            
         end
     end
     % =====================================================================

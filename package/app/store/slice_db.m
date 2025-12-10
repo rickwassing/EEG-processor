@@ -93,10 +93,16 @@ classdef slice_db < handle
                 if ~isfield(obj.state.(slice), key)
                     obj.state.(slice).(key) = [];
                 end
-                % Execute middleware
+                existing = obj.state.(slice).(key);
+                if isempty(existing)
+                    existing = {'NaN'};
+                elseif ~iscell(existing)
+                    existing = {existing};
+                end
+               % Execute middleware
                 app_store.getInstance().execMiddleware('db', 'insert', 'PrevState', obj.state.(slice).(key), 'NewState', val);
                 % If no error was thrown, all is ok and we can return the state
-                obj.state.(slice).(key) = [val; ascolumn(obj.state.(slice).(key))];
+                obj.state.(slice).(key) = [val; ascolumn(existing)];
                 if props.makeunique
                     obj.state.(slice).(key) = unique(obj.state.(slice).(key), 'stable');
                 end
