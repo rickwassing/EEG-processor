@@ -34,8 +34,6 @@ try
         %creating the state for json file
         NewState = DefaultState(store.ds.path);
         store.ds.JSON = NewState.JSON;
-        % store.ds.subjects_all = NewState.Subjects;
-        % store.ds.files_all = NewState.Files;
     end
 
     store.ds.files_all= payload.files_all;
@@ -44,5 +42,6 @@ try
 catch ME
     printerrormessage(ME, sprintf('The error occurred during in %s.', mfilename('class')))
 end
+
 
 end
