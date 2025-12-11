@@ -27,6 +27,20 @@ try
     % Update the path
     store.ds.updatePath(payload.path);
     store.db.insert('app', 'recent', {payload.path}, 'makeunique', true, 'croplimit', 15);
+
+    if exist([store.ds.path, '/rawdata/dataset_description.json'], 'file') ~= 0
+        store.ds.JSON = json2struct([store.ds.path, '/rawdata/dataset_description.json']);    
+    else
+        %creating the state for json file
+        NewState = DefaultState(store.ds.path);
+        store.ds.JSON = NewState.JSON;
+        % store.ds.subjects_all = NewState.Subjects;
+        % store.ds.files_all = NewState.Files;
+    end
+
+    store.ds.files_all= payload.files_all;
+    store.ds.subjects_all= payload.subjects_all;
+    
 catch ME
     printerrormessage(ME, sprintf('The error occurred during in %s.', mfilename('class')))
 end
