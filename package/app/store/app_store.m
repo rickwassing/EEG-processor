@@ -33,6 +33,9 @@ classdef app_store < handle
         dbChanged;
         dsChanged;
         procChanged;
+        sortChanged;
+        filterChanged;
+        searchChanged;
     end
     % #####################################################################
     % METHODS

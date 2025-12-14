@@ -35,7 +35,11 @@ try
     callbackfx(payload)
     % Broadcast the event labels so other components can update
     for i = 1:length(eventlabels)
-        notify(store, eventlabels{i}, event);
+        if isempty(event)
+            notify(store, eventlabels{i});        % no event data
+        else
+            notify(store, eventlabels{i}, event); % with event data
+        end
     end
 catch ME
     printerrormessage(ME, sprintf('The error occurred during in %s.', mfilename('class')))

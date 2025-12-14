@@ -8,7 +8,7 @@
 %   payload - [struct] Structure containing the field 'path'
 %
 % Outputs:
-%   none
+%   new fields in store,ds:files_all,subjects_all,JSON
 
 % Authors:
 %   Rick Wassing, Woolcock Institute of Medical Research, Sydney, Australia

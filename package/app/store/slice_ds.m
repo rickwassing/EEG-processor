@@ -21,7 +21,11 @@ classdef slice_ds < handle
         entities;
         JSON;
         subjects_all;
-        files_all;        
+        files_all;   
+        subjects_filtered;
+        files_filtered;
+        currentSortField;
+        currentFilter;        
     end
     % #####################################################################
     % METHODS
@@ -36,7 +40,9 @@ classdef slice_ds < handle
             obj.entities = struct([]);
             obj.JSON = struct([]);
             obj.subjects_all = struct([]);
-            obj.files_all = struct([]);            
+            obj.files_all = struct([]);    
+            obj.currentSortField = struct([]); 
+            obj.currentFilter = struct([]); 
         end
     end
     % =====================================================================
