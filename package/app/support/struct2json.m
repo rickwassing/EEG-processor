@@ -45,7 +45,8 @@ try
     % Make sure there are no backslashes and make sure the parent exists
     filename = strrep(filename, '\', '/');
     filepath = fileparts(filename);
-    if exist(filepath, 'dir') ~= 2
+    % exist(path,'dir') == 7 means directory exists. If not, then mkdir
+    if exist(filepath, 'dir') ~= 7
         mkdir(filepath)
     end
 
