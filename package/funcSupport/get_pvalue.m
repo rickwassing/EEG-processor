@@ -1,31 +1,22 @@
-function [stat, pval] = get_pvalue(settings, stat, type, u, m, c)
+function [stat, pval] = get_pvalue(settings, prefix, statToken, type, unit, modality, design, contrast)
 switch type
     case 'p_unc'
-        p_type = 'uncp';
+        pType = 'uncp';
     case 'p_fwe'
-        p_type = 'fwep';
+        pType = 'fwep';
     case 'p_fdr'
-        p_type = 'fdrp';
+        pType = 'fdrp';
     case 'p_perm'
-        p_type = 'fwep';
+        pType = 'fwep';
     otherwise
         error('type is not supported')
 end
-switch stat
-    case 'F'
-        fname_stat = fullfile(settings.OutputDir, 'output', sprintf('palm_fstat_%s_fstat_m%i_d1_c%i.csv', u, m, c));
-        stat = asrow(readmatrix(fname_stat, 'Delimiter', ','));
-        fname_p = fullfile(settings.OutputDir, 'output', sprintf('palm_fstat_%s_fstat_%s_m%i_d1_c%i.csv', u, p_type, m, c));
-        pval = asrow(readmatrix(fname_p, 'Delimiter', ','));
-    case 'T'
-        fname_stat = fullfile(settings.OutputDir, 'output', sprintf('palm_tstat%i_%s_tstat_m%i_d1_c1.csv', c, u, m));
-        stat = asrow(readmatrix(fname_stat, 'Delimiter', ','));
-        fname_p = fullfile(settings.OutputDir, 'output', sprintf('palm_tstat%i_%s_tstat_%s_m%i_d1_c1.csv', c, u, p_type, m));
-        pval = asrow(readmatrix(fname_p, 'Delimiter', ','));
-    case 'V'
-        fname_stat = fullfile(settings.OutputDir, 'output', sprintf('palm_tstat%i_%s_vstat_m%i_d1_c1.csv', c, u, m));
-        stat = asrow(readmatrix(fname_stat, 'Delimiter', ','));
-        fname_p = fullfile(settings.OutputDir, 'output', sprintf('palm_tstat%i_%s_vstat_%s_m%i_d1_c1.csv', c, u, p_type, m));
-        pval = asrow(readmatrix(fname_p, 'Delimiter', ','));
-end
+
+outputDir = fullfile(settings.OutputDir, 'output');
+fnameStat = find_palm_output(outputDir, prefix, statToken, ...
+    modality, design, contrast, unit);
+fnameP = find_palm_output(outputDir, prefix, ...
+    sprintf('%s_%s', statToken, pType), modality, design, contrast, unit);
+stat = asrow(readmatrix(fnameStat, 'Delimiter', ','));
+pval = asrow(readmatrix(fnameP, 'Delimiter', ','));
 end

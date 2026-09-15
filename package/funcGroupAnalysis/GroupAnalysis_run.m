@@ -182,14 +182,20 @@ if exist(InputFileDir, 'dir') == 0
         error(cmdout);
     end
 end
-if exist(OutputFileDir, 'dir') == 0
-    if ispc
-        [status, cmdout] = system(['mkdir "', OutputFileDir, '"']);
-    else
-        [status, cmdout] = system(['mkdir -p "', OutputFileDir, '"']);
+% PALM uses fixed output prefixes. Remove the complete output directory so
+% files left by an earlier run cannot be mistaken for current results.
+if doRun && exist(OutputFileDir, 'dir') ~= 0
+    [status, message] = rmdir(OutputFileDir, 's');
+    if status == 0
+        error('Could not clear the PALM output directory %s: %s', ...
+            OutputFileDir, message);
     end
-    if status ~= 0
-        error(cmdout);
+end
+if exist(OutputFileDir, 'dir') == 0
+    [status, message] = mkdir(OutputFileDir);
+    if status == 0
+        error('Could not create the PALM output directory %s: %s', ...
+            OutputFileDir, message);
     end
 end
 % --------------------------------------------------
@@ -466,13 +472,6 @@ end
 % --------------------------------------------------
 % Init the output fields
 GLM.data = DepVars;
-% Check what value is given as the 'unit' key in the filename
-switch Settings.PostStats.Method
-    case {'Uncorrected', 'FDR'}
-        unit = 'dat';
-    otherwise
-        unit = 'dpv';
-end
 GLM.result = struct();
 for i = 1:length(GLM.data)
     % --------------------------------------------------
@@ -486,41 +485,46 @@ for i = 1:length(GLM.data)
         % Extract the title
         GLM.result(i).t(j).title = Tcons(j).Title;
         % --------------------------------------------------
+        % Resolve the ordinary statistic first. PALM determines its output
+        % unit from the data representation; it is not determined by the
+        % post-statistics method.
+        prefix = sprintf('palm_tstat%i', j);
+        [fname, unit, StatToken] = find_palm_output(OutputFileDir, prefix, ...
+            {'tstat', 'vstat'}, i, 1, 1, 'data');
+        GLM.result(i).t(j).stat = asrow(readmatrix(fname, 'Delimiter', ','));
+        % --------------------------------------------------
         % Save the Cohen's D statistic
-        fname = fullfile(OutputFileDir, sprintf('palm_tstat%i_%s_cohen_m%i_d1_c1.csv', j, unit, i));
+        fname = find_palm_output(OutputFileDir, prefix, 'cohen', i, 1, 1, unit);
         GLM.result(i).t(j).cohen = asrow(readmatrix(fname, 'Delimiter', ','));
         % --------------------------------------------------
         % Save the contrast of parameter estimates
-        fname = fullfile(OutputFileDir, sprintf('palm_tstat%i_%s_cope_m%i_d1_c1.csv', j, unit, i));
+        fname = find_palm_output(OutputFileDir, prefix, 'cope', i, 1, 1, unit);
         GLM.result(i).t(j).cope = asrow(readmatrix(fname, 'Delimiter', ','));
         % --------------------------------------------------
         % Save the variance of the constrast of parameter estimates
-        fname = fullfile(OutputFileDir, sprintf('palm_tstat%i_%s_varcope_m%i_d1_c1.csv', j, unit, i));
+        fname = find_palm_output(OutputFileDir, prefix, 'varcope', i, 1, 1, unit);
         GLM.result(i).t(j).varcope = asrow(readmatrix(fname, 'Delimiter', ','));
         % --------------------------------------------------
-        % Save the t-statistic
-        Stat = 'T';
-        fname = fullfile(OutputFileDir, sprintf('palm_tstat%i_%s_tstat_m%i_d1_c1.csv', j, unit, i));
-        if exist(fname, 'file') == 0
-            Stat = 'V';
-            fname = fullfile(OutputFileDir, sprintf('palm_tstat%i_%s_vstat_m%i_d1_c1.csv', j, unit, i));
-        end
-        GLM.result(i).t(j).stat = asrow(readmatrix(fname, 'Delimiter', ','));
-        % --------------------------------------------------
         % Save the uncorrected p-value
-        [~, GLM.result(i).t(j).p_unc] = get_pvalue(Settings, Stat, 'p_unc', unit, i, j);
+        [~, GLM.result(i).t(j).p_unc] = get_pvalue(Settings, prefix, ...
+            StatToken, 'p_unc', unit, i, 1, 1);
         % --------------------------------------------------
         % Save the FWE corrected p-value
-        [~, GLM.result(i).t(j).p_fwe] = get_pvalue(Settings, Stat, 'p_fwe', unit, i, j);
+        [~, GLM.result(i).t(j).p_fwe] = get_pvalue(Settings, prefix, ...
+            StatToken, 'p_fwe', unit, i, 1, 1);
         % --------------------------------------------------
         % Save the permutation corrected p-value
         switch GLM.poststats.Method
             case 'TFCE'
-                [GLM.result(i).t(j).t_perm, GLM.result(i).t(j).p_perm] = get_pvalue(Settings, Stat, 'p_fwe', 'tfce', i, j);
+                [GLM.result(i).t(j).t_perm, GLM.result(i).t(j).p_perm] = ...
+                    get_pvalue(Settings, prefix, StatToken, 'p_fwe', ...
+                    'tfce', i, 1, 1);
                 GLM.result(i).t(j).p_fdr = NaN;
                 GLM.result(i).t(j).cluster = struct([]);
             case 'ClusterMass'
-                [GLM.result(i).t(j).t_perm, GLM.result(i).t(j).p_perm] = get_pvalue(Settings, Stat, 'p_fwe', 'clusterm', i, j);
+                [GLM.result(i).t(j).t_perm, GLM.result(i).t(j).p_perm] = ...
+                    get_pvalue(Settings, prefix, StatToken, 'p_fwe', ...
+                    'clusterm', i, 1, 1);
                 GLM.result(i).t(j).p_fdr = NaN;
                 GLM.result(i).t(j).cluster = get_cluster(...
                     GLM.result(i).t(j).t_perm, ...
@@ -529,7 +533,9 @@ for i = 1:length(GLM.data)
                     GLM.surface, ...
                     GLM.chanlocs);
             case 'ClusterExtent'
-                [GLM.result(i).t(j).t_perm, GLM.result(i).t(j).p_perm] = get_pvalue(Settings, Stat, 'p_fwe', 'clustere', i, j);
+                [GLM.result(i).t(j).t_perm, GLM.result(i).t(j).p_perm] = ...
+                    get_pvalue(Settings, prefix, StatToken, 'p_fwe', ...
+                    'clustere', i, 1, 1);
                 GLM.result(i).t(j).p_fdr = NaN;
                 GLM.result(i).t(j).cluster = get_cluster(...
                     GLM.result(i).t(j).t_perm, ...
@@ -540,7 +546,8 @@ for i = 1:length(GLM.data)
             case 'FDR'
                 GLM.result(i).t(j).t_perm = NaN;
                 GLM.result(i).t(j).p_perm = NaN;
-                [~, GLM.result(i).t(j).p_fdr] = get_pvalue(Settings, Stat, 'p_fdr', 'dat', i, j);
+                [~, GLM.result(i).t(j).p_fdr] = get_pvalue(Settings, prefix, ...
+                    StatToken, 'p_fdr', unit, i, 1, 1);
                 GLM.result(i).t(j).cluster = struct([]);
             otherwise
                 GLM.result(i).t(j).t_perm = NaN;
@@ -556,24 +563,32 @@ for i = 1:length(GLM.data)
         % Extract the title
         GLM.result(i).f(j).title = sprintf('F%i', j);
         % --------------------------------------------------
-        % Save the z-statistic
-        fname = fullfile(OutputFileDir, sprintf('palm_fstat_%s_fstat_m%i_d1_c%i.csv', unit, i, j));
+        % Save the F-statistic and discover its PALM data unit.
+        prefix = 'palm_fstat';
+        [fname, unit] = find_palm_output(OutputFileDir, prefix, ...
+            'fstat', i, 1, j, 'data');
         GLM.result(i).f(j).stat = asrow(readmatrix(fname, 'Delimiter', ','));
         % --------------------------------------------------
         % Save the uncorrected p-value
-        [~, GLM.result(i).f(j).p_unc] = get_pvalue(Settings, 'F', 'p_unc', unit, i, j);
+        [~, GLM.result(i).f(j).p_unc] = get_pvalue(Settings, prefix, ...
+            'fstat', 'p_unc', unit, i, 1, j);
         % --------------------------------------------------
         % Save the FWE corrected p-value
-        [~, GLM.result(i).f(j).p_fwe] = get_pvalue(Settings, 'F', 'p_fwe', unit, i, j);
+        [~, GLM.result(i).f(j).p_fwe] = get_pvalue(Settings, prefix, ...
+            'fstat', 'p_fwe', unit, i, 1, j);
         % --------------------------------------------------
         % Save the permutation corrected p-value
         switch Settings.PostStats.Method
             case 'TFCE'
-                [GLM.result(i).f(j).f_perm, GLM.result(i).f(j).p_perm] = get_pvalue(Settings, 'F', 'p_fwe', 'tfce', i, j);
+                [GLM.result(i).f(j).f_perm, GLM.result(i).f(j).p_perm] = ...
+                    get_pvalue(Settings, prefix, 'fstat', 'p_fwe', ...
+                    'tfce', i, 1, j);
                 GLM.result(i).f(j).p_fdr = NaN;
                 GLM.result(i).f(j).cluster = struct([]);
             case 'ClusterMass'
-                [GLM.result(i).f(j).f_perm, GLM.result(i).f(j).p_perm] = get_pvalue(Settings, 'F', 'p_fwe', 'clusterm', i, j);
+                [GLM.result(i).f(j).f_perm, GLM.result(i).f(j).p_perm] = ...
+                    get_pvalue(Settings, prefix, 'fstat', 'p_fwe', ...
+                    'clusterm', i, 1, j);
                 GLM.result(i).f(j).p_fdr = NaN;
                 GLM.result(i).f(j).cluster = get_cluster(...
                     GLM.result(i).f(j).f_perm, ...
@@ -582,7 +597,9 @@ for i = 1:length(GLM.data)
                     GLM.surface, ...
                     GLM.chanlocs);
             case 'ClusterExtent'
-                [GLM.result(i).f(j).f_perm, GLM.result(i).f(j).p_perm] = get_pvalue(Settings, 'F', 'p_fwe', 'clustere', i, j);
+                [GLM.result(i).f(j).f_perm, GLM.result(i).f(j).p_perm] = ...
+                    get_pvalue(Settings, prefix, 'fstat', 'p_fwe', ...
+                    'clustere', i, 1, j);
                 GLM.result(i).f(j).p_fdr = NaN;
                 GLM.result(i).f(j).cluster = get_cluster(...
                     GLM.result(i).f(j).f_perm, ...
@@ -593,7 +610,8 @@ for i = 1:length(GLM.data)
             case 'FDR'
                 GLM.result(i).f(j).f_perm = NaN;
                 GLM.result(i).f(j).p_perm = NaN;
-                [~, GLM.result(i).f(j).p_fdr] = get_pvalue(Settings, 'F', 'p_fdr', 'dat', i, j);
+                [~, GLM.result(i).f(j).p_fdr] = get_pvalue(Settings, prefix, ...
+                    'fstat', 'p_fdr', unit, i, 1, j);
                 GLM.result(i).f(j).cluster = struct([]);
             otherwise
                 GLM.result(i).f(j).f_perm = NaN;
