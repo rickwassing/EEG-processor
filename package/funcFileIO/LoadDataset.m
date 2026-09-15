@@ -1,7 +1,7 @@
 function EEG = LoadDataset(FullFilePath, Part)
 % =========================================================
 % Check what filetype to load
-[~, ~, Extension] = fileparts(FullFilePath);
+[Filepath, Filename, Extension] = fileparts(FullFilePath);
 switch Extension
     % ---------------------------------------------------------
     case '.set'
@@ -12,7 +12,11 @@ switch Extension
         switch Part
             case 'all'
                 disp('>> BIDS: Reading complete dataset from EEGLAB file')
-                EEG = pop_loadset(FullFilePath);
+                EEG = pop_loadset('filename', [Filename, '.set'], 'filepath', Filepath, 'check', 'off');
+                if mod(size(EEG.data,2), EEG.pnts) ~= 0
+                    warning('eeg_checkset error: the number of frames does not divide the number of columns in the data.')
+                    keyboard
+                end
                 disp('>> - Finished loading')
             otherwise
                 disp('>> BIDS: Reading header information from EEGLAB file')

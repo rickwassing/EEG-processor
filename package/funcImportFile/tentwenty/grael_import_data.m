@@ -23,7 +23,7 @@ if isempty(eegChans)
     error('No EEG channels found with any of the following labels: ''Fpz'', ''Fz'', ''F3'', ''F4'', ''Cz'', ''C3'', ''C4'', ''Pz'', ''Oz'', ''O1'', ''O2'', ''M1'', ''M2''.')
 end
 % Sort the channels
-idx = nan(size(eegChans)); 
+idx = nan(size(eegChans));
 for i = 1:length(eegChans)
     idx(i) = find(strcmpi(ExpEEGChanLabels, data.label{eegChans(i)}));
 end

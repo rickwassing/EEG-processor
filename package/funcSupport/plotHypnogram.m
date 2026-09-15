@@ -23,14 +23,14 @@ if isempty(hyp)
     hyp = sleep_cycles(stages, definition);
 end
 
-% Bacward copatability
-if ~any(strcmpi(hyp.Properties.VariableNames, 'sleepstage'))
+% Backward compatibility
+if ~isfield(hyp, 'sleepstage')
     hyp.sleepstage = hyp.stage_num;
 end
-if ~any(strcmpi(hyp.Properties.VariableNames, 'sleepcycle'))
+if ~isfield(hyp, 'sleepcycle')
     hyp.sleepcycle = hyp.cycle;
 end
-if ~any(strcmpi(hyp.Properties.VariableNames, 'sleepepisode'))
+if ~isfield(hyp, 'sleepepisode')
     hyp.sleepepisode = hyp.episode;
 end
 

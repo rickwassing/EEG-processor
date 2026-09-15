@@ -3,7 +3,6 @@ try
     %EEG = eeg_interp(EEG, EEG.chanlocs(chanIdx), 'spherical');
 
     EEG = eeg_interp(EEG, chanIdx, 'spherical');
-    keyboard
 
 catch ME
     % If the error is as follows then we can solve it by rounding the

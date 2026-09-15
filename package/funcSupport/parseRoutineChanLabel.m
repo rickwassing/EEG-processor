@@ -5,6 +5,10 @@ ref = cell(length(chanlist), 1);
 iseeg = false(length(chanlist), 1);
 for i = 1:length(chanlist)
     % Check if it matches the regexp for an EEG channel
+    if startsWith(chanlist{i},'CPA')
+        label{i}=chanlist{i};
+        continue
+    end
     iseeg(i) = ~isempty(regexp(lower(chanlist{i}), '^[fcpotma](\d+|[pz])', 'once'));
     % if it is not EEG, then simply return the label
     if ~iseeg(i)
