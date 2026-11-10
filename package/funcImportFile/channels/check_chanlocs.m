@@ -12,7 +12,11 @@ function EEG = check_chanlocs(EEG, overwritedataset)
 issuedetected = false;
 
 % Check what system it is
+try
 [~, system] = ishdeeg({EEG.chanlocs.labels});
+catch ME
+    keyboard
+end
 % Extract indices of channels on either size of both X and Y axes
 switch system
     case 'egi257'

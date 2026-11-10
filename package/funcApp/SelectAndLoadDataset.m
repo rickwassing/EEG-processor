@@ -73,6 +73,9 @@ while ~DatasetLoaded
                     app.State.Protocol.JSON.(fnames{i}) = defJSON.(fnames{i});
                 end
                 % There must be a value for the license
+                if ~isfield(app.State.Protocol, 'License')
+                    app.State.Protocol.JSON.License = 'Public Domain';
+                end
                 if isempty(app.State.Protocol.JSON.License)
                     app.State.Protocol.JSON.License = 'Public Domain';
                 end

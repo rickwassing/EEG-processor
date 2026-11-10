@@ -22,7 +22,24 @@ switch Extension
                 disp('>> BIDS: Reading header information from EEGLAB file')
                 fprintf('>> BIDS: %s\n', FullFilePath)
                 load('-mat', FullFilePath, 'EEG');
+                switch lastwarn
+                    case 'Variable ''EEG'' not found.'
+                        EEG = load(FullFilePath, '-mat');
+                end
                 disp('>> - Finished loading')
+        end
+        % ---------------------------------------------------------
+        % Check that the data is read correctly
+        hasFailed = false;
+        if isempty(EEG)
+            hasFailed = true;
+        elseif ~isstruct(EEG)
+            hasFailed = true;
+        elseif ~isfield(EEG, 'data')
+            hasFailed = true;
+        end
+        if hasFailed
+            error('Could not read file ''%s''. A critical error has occurred', FullFilePath)
         end
         % ---------------------------------------------------------
         % Check that the set-, filename and filepaths are correct
@@ -42,6 +59,17 @@ switch Extension
             return
         end
         EEG = tmp.EEG;
+        % ---------------------------------------------------------
+        % Legacy support for when the field was called "bands", later renamed
+        % to "features"
+        if ~isfield(EEG, 'features')
+            if isfield(EEG, 'bands')
+                EEG.features = EEG.bands;
+                EEG = rmfield(EEG, 'bands');
+            else
+                error('Input does not contain the fields ''features'' or ''bands'' in file ''%s''.', FullFilePath)
+            end
+        end
         % ---------------------------------------------------------
         % Check that the set-, filename and filepaths are correct
         [EEG.filepath, EEG.filename] = fileparts(FullFilePath);

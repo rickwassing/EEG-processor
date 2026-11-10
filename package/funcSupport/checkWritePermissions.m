@@ -8,6 +8,7 @@ try
     fid = fopen([path, '/check-permissions.txt'], 'w');
     if fid == -1
         Permissions = false;
+        return
     end
     fprintf(fid, matlab_ipsum('Paragraphs', 100, 'Sentences', 15)); % try to save a file
     fclose(fid);
@@ -38,7 +39,7 @@ try
         error(cmdout)
     end
 catch ME
-    printME(ME)
+    printME(ME);
     Permissions = false;
 end
 

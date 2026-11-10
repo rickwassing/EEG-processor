@@ -42,7 +42,9 @@ if strcmpi(Part, 'header')
     EEG = eeg_checkset(EEG, 'eventconsistency');
     % Make sure the data is no longer part of the 'EEG' variable
     tmpeeg = EEG; % Keep the original data to place back later (does not require extra memory, see 'https://au.mathworks.com/help/matlab/matlab_prog/memory-allocation.html')
-    EEG = rmfield(EEG, 'data'); % Remove the 'data' field
+    if isfield(EEG, 'data')
+        EEG = rmfield(EEG, 'data'); % Remove the 'data' field
+    end
     % Add the datafile name to the data field
     if isfield(EEG, 'datfile')
         EEG.data = EEG.datfile;
