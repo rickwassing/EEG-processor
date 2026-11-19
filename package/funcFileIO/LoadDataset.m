@@ -22,8 +22,10 @@ switch Extension
                 disp('>> BIDS: Reading header information from EEGLAB file')
                 fprintf('>> BIDS: %s\n', FullFilePath)
                 load('-mat', FullFilePath, 'EEG');
+                didSwitch = false;
                 switch lastwarn
-                    case 'Variable ''EEG'' not found.'
+                    case {'Variable ''EEG'' not found.', 'Variable "EEG" not found.'}
+                        didSwitch = true;
                         EEG = load(FullFilePath, '-mat');
                 end
                 disp('>> - Finished loading')
@@ -39,6 +41,7 @@ switch Extension
             hasFailed = true;
         end
         if hasFailed
+            keyboard
             error('Could not read file ''%s''. A critical error has occurred', FullFilePath)
         end
         % ---------------------------------------------------------
