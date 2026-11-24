@@ -14,8 +14,7 @@ switch Extension
                 disp('>> BIDS: Reading complete dataset from EEGLAB file')
                 EEG = pop_loadset('filename', [Filename, '.set'], 'filepath', Filepath, 'check', 'off');
                 if mod(size(EEG.data,2), EEG.pnts) ~= 0
-                    warning('eeg_checkset error: the number of frames does not divide the number of columns in the data.')
-                    keyboard
+                    error('eeg_checkset error: the number of frames does not divide the number of columns in the data.')
                 end
                 disp('>> - Finished loading')
             otherwise
